@@ -179,3 +179,18 @@
 .gs-voice-form .gs-voice-mic{color:#cef9ff;background:#102e42;border:1px solid #62c9d45a;min-width:100px}
 .gs-voice-form .gs-voice-mic:disabled{opacity:.48;cursor:not-allowed}
 .gs-voice-form button:focus-visible,.gs-voice-stop:focus-visible{outline:2px solid #82edfc;outline-offset:3px}
+
+
+/* V2 phone QA: reserve a dedicated status rail below the whole core.
+   The scaled button no longer escapes the stage or covers its status text. */
+.gs-reactor-status{z-index:8;left:0;right:0;bottom:5px;min-height:26px;white-space:nowrap}
+@media(max-width:720px){
+  .gs-command-visual{min-height:320px;max-height:none;overflow:visible}
+  .gs-reactor{height:310px;min-height:310px;overflow:visible}
+  .gs-reactor-touch{
+    position:absolute;top:0;left:50%;width:320px;height:320px;
+    transform:translateX(-50%) scale(.77);transform-origin:top center
+  }
+  .gs-reactor-status{bottom:0;font-size:10px}
+  .gs-reactor-status span:last-child{font-size:9px}
+}
