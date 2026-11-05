@@ -76,6 +76,42 @@ export default function GreenSoilLab() {
   const [error, setError] = useState('')
   const [sourceMode, setSourceMode] = useState<'auto' | 'manual'>('auto')
   const [feedStatus, setFeedStatus] = useState('Checking today’s local baseline…')
+  const [watchStatus, setWatchStatus] = useState('Intraday watch feed not verified')
+  const [watchRows, setWatchRows] = useState<Array<{index:string;status:string;bias?:string;reason?:string;as_of?:string}>>([])
+  useEffect(() => {
+    let disposed = false
+    let controller: AbortController | null = null
+    const refresh = async () => {
+      controller?.abort()
+      controller = new AbortController()
+      try {
+        const response = await fetch('/greensoil/api/watch', {
+          method: 'GET', credentials: 'same-origin', cache: 'no-store', signal: controller.signal,
+        })
+        if (disposed) return
+        if (!response.ok) throw new Error('No valid watch feed')
+        const raw: unknown = await response.json()
+        if (typeof raw !== 'object' || raw === null || Array.isArray(raw)) throw new Error('Invalid watch response')
+        const data = raw as Record<string, unknown>
+        if (data.status !== 'WATCH_ONLY' || !Array.isArray(data.warnings) || data.warnings.length !== 2) {
+          setWatchRows([])
+          setWatchStatus('No verified real-time feed — NO PREDICTION')
+          return
+        }
+        const rows = data.warnings
+        if (!rows.every(x => typeof x === 'object' && x !== null && ['NIFTY','SENSEX'].includes((x as Record<string, unknown>).index as string))) throw new Error('Invalid watch indexes')
+        setWatchRows(rows as Array<{index:string;status:string;bias?:string;reason?:string;as_of?:string}>)
+        setWatchStatus('Local index-pressure snapshot received; NEWS AI NOT CONNECTED')
+      } catch (err) {
+        if (disposed || (err instanceof DOMException && err.name === 'AbortError')) return
+        setWatchRows([])
+        setWatchStatus('No verified real-time feed — NO PREDICTION')
+      }
+    }
+    void refresh()
+    const interval = window.setInterval(() => void refresh(), 30_000)
+    return () => { disposed = true; controller?.abort(); window.clearInterval(interval) }
+  }, [])
   useEffect(() => {
     if (sourceMode !== 'auto') return
     let disposed = false
@@ -161,6 +197,20 @@ export default function GreenSoilLab() {
             onClick={() => setSymbol(value)}>{value}</button>
         )}
       </div>
+      <section className="rounded-md border p-3" aria-label="Intraday event watch">
+        <h2 className="font-semibold">Intraday Spike + OI Watch (monitor only)</h2>
+        <p role="status" className="text-xs text-muted-foreground">{watchStatus}</p>
+        <div className="mt-2 grid gap-2 sm:grid-cols-2">
+          {watchRows.length ? watchRows.map(row => (
+            <div key={row.index} className="rounded border p-2 text-sm">
+              <strong>{row.index}</strong>: {row.status} {row.bias ?? ''}
+              <div className="text-xs text-muted-foreground">{row.reason ?? 'No verified directional conclusion'}</div>
+              {row.as_of && <div className="text-xs">As of: {row.as_of}</div>}
+            </div>
+          )) : <p className="text-sm">Feed unavailable; automatic predictions and revised levels disabled.</p>}
+        </div>
+        <p className="mt-2 text-xs">No news provider connected. Early warnings are not entries; 5-minute candle confirmation required. No new price targets generated.</p>
+      </section>
       <ChartView symbol={symbol} baseline={baseline} />
       <p className="text-xs text-muted-foreground">
         CE green · PE red · PDH/PDL/PDC gray · Support teal · Resistance orange · NO TRADE amber.
