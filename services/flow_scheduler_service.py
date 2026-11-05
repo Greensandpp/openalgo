@@ -548,6 +548,9 @@ def execute_workflow_scheduled(
     the key in the jobstore, still run. New jobs pass None and the current key
     is decrypted from the workflow row on every run.
     """
+    # GreenSoil lab: scheduled workflows must never execute.
+    return None
+
     from services.flow_executor_service import execute_workflow
 
     logger.info(f"Scheduled execution of workflow {workflow_id}")
