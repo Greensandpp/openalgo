@@ -65,6 +65,10 @@ def import_broker_module(broker_name: str) -> Any | None:
 def modify_order_with_auth(
     order_data: dict[str, Any], auth_token: str, broker: str, original_data: dict[str, Any]
 ) -> tuple[bool, dict[str, Any], int]:
+    # GreenSoil isolated lab: disallow any broker/order mutation, including internal jobs.
+    from greensoil_lab.read_only import raise_broker_write_blocked
+    raise_broker_write_blocked("modify_order_with_auth")
+
     """
     Modify an order using provided auth token.
 
@@ -205,6 +209,10 @@ def modify_order(
     auth_token: str | None = None,
     broker: str | None = None,
 ) -> tuple[bool, dict[str, Any], int]:
+    # GreenSoil isolated lab: disallow any broker/order mutation, including internal jobs.
+    from greensoil_lab.read_only import raise_broker_write_blocked
+    raise_broker_write_blocked("modify_order")
+
     """
     Modify an existing order.
     Supports both API-based authentication and direct internal calls.
