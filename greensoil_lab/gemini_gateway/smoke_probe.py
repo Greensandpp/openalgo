@@ -39,21 +39,25 @@ def probe(fetch=None, emit=print):
         emit("GEMINI_SMOKE: listed_model_available")
         payload = json.dumps({
             "contents": [{"parts": [{"text": "Reply with one word: READY"}]}],
-            "generationConfig": {"maxOutputTokens": 16, "temperature": 0},
+            "generationConfig": {"maxOutputTokens": 96, "temperature": 0},
         }).encode()
         request = urllib.request.Request(
             BASE + MODEL + ":generateContent", data=payload, method="POST",
             headers={"x-goog-api-key": key, "Content-Type": "application/json"},
         )
-        with opener(request, timeout=15) as response:
+        with opener(request, timeout=50) as response:
             result = json.load(response)
         valid = isinstance(result.get("candidates"), list) and bool(result["candidates"])
         emit("GEMINI_SMOKE: generation_" + ("success" if valid else "empty"))
         return valid
     except urllib.error.HTTPError as error:
         emit("GEMINI_SMOKE: provider_http_" + str(error.code))
-    except (urllib.error.URLError, OSError, TimeoutError, ValueError, KeyError, TypeError):
-        emit("GEMINI_SMOKE: connection_failed")
+    except (TimeoutError,):
+        emit("GEMINI_SMOKE: provider_timeout")
+    except urllib.error.URLError:
+        emit("GEMINI_SMOKE: network_error")
+    except (OSError, ValueError, KeyError, TypeError):
+        emit("GEMINI_SMOKE: response_parse_or_io_error")
     return False
 
 
