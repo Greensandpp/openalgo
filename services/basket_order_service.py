@@ -122,6 +122,10 @@ def place_single_order(
     total_orders: int,
     order_index: int,
 ) -> dict[str, Any]:
+    # GreenSoil isolated lab: disallow any broker/order mutation, including internal jobs.
+    from greensoil_lab.read_only import raise_broker_write_blocked
+    raise_broker_write_blocked("place_single_order")
+
     """
     Place a single order (no per-order event emission - summary event emitted at end)
 
@@ -186,6 +190,10 @@ def place_single_order(
 def process_basket_order_with_auth(
     basket_data: dict[str, Any], auth_token: str, broker: str, original_data: dict[str, Any]
 ) -> tuple[bool, dict[str, Any], int]:
+    # GreenSoil isolated lab: disallow any broker/order mutation, including internal jobs.
+    from greensoil_lab.read_only import raise_broker_write_blocked
+    raise_broker_write_blocked("process_basket_order_with_auth")
+
     """
     Process a basket order using provided auth token.
 
@@ -404,6 +412,10 @@ def place_basket_order(
     auth_token: str | None = None,
     broker: str | None = None,
 ) -> tuple[bool, dict[str, Any], int]:
+    # GreenSoil isolated lab: disallow any broker/order mutation, including internal jobs.
+    from greensoil_lab.read_only import raise_broker_write_blocked
+    raise_broker_write_blocked("place_basket_order")
+
     """
     Place a basket of orders.
     Supports both API-based authentication and direct internal calls.
