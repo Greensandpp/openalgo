@@ -7,10 +7,10 @@ from greensoil_lab.read_only import install_read_only_http_guard, denied_broker_
 class TestGreenSoilLabReadOnly(unittest.TestCase):
     def setUp(self):
         app = Flask(__name__)
-        app.add_url_rule("/chart", view_func=lambda: "chart", methods=["GET"])
-        app.add_url_rule("/api/v1/placeorder", view_func=lambda: "ORDER SENT", methods=["POST"])
-        app.add_url_rule("/agent", view_func=lambda: "AGENT EXECUTED", methods=["POST"])
-        app.add_url_rule("/flow/execute", view_func=lambda: "FLOW EXECUTED", methods=["POST"])
+        app.add_url_rule("/chart", endpoint="chart_read", view_func=lambda: "chart", methods=["GET"])
+        app.add_url_rule("/api/v1/placeorder", endpoint="place_order", view_func=lambda: "ORDER SENT", methods=["POST"])
+        app.add_url_rule("/agent", endpoint="agent_execute", view_func=lambda: "AGENT EXECUTED", methods=["POST"])
+        app.add_url_rule("/flow/execute", endpoint="flow_execute", view_func=lambda: "FLOW EXECUTED", methods=["POST"])
         install_read_only_http_guard(app)
         self.client = app.test_client()
 
