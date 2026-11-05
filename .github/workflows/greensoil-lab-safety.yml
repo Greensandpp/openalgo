@@ -41,6 +41,8 @@ jobs:
         run: python -m unittest discover -s test -p 'test_greensoil_lab_scenario_revisions.py' -v
       - name: Check GET-only scenario revision feed
         run: python -m unittest discover -s test -p 'test_greensoil_lab_revision_source.py' -v
+      - name: Test five-minute candidate evidence gate
+        run: python -m unittest discover -s test -p 'test_greensoil_lab_scenario_gate.py' -v
       - name: Verify no broker credentials in CI
         run: |
           test -z "${BROKER_API_KEY:-}"
