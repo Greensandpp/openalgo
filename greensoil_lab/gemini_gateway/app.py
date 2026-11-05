@@ -45,7 +45,7 @@ def _settings():
         "key": os.environ.get("GEMINI_API_KEY", "").strip(),
         "token": os.environ.get("GATEWAY_ACCESS_TOKEN", "").strip(),
         "origin": os.environ.get("ALLOWED_ORIGIN", "").strip(),
-        "model": os.environ.get("GEMINI_MODEL", "gemini-2.5-flash").strip(),
+        "model": os.environ.get("GEMINI_MODEL", "gemini-3.8-flash").strip(),
     }
 
 
