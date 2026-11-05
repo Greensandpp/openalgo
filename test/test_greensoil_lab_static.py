@@ -114,6 +114,30 @@ class TestGuardPlacement(unittest.TestCase):
         self.assertIn("GREENSOIL_LAB_READ_ONLY", ast.unparse(body[0]))
         self.assertNotIn("plan_factory", ast.unparse(body[0]))
 
+    def test_background_strategy_entrypoints_are_disabled(self):
+        targets = {
+            "services/openscript_runner_service.py": {
+                "start_run": "GREENSOIL_LAB_READ_ONLY",
+                "restore_runs": "return (0, 0)",
+            },
+            "services/flow_scheduler_service.py": {
+                "execute_workflow_scheduled": "return None",
+            },
+        }
+        for path, functions in targets.items():
+            tree = ast.parse((ROOT / path).read_text(encoding="utf-8"))
+            found = {n.name: n for n in tree.body if isinstance(n, ast.FunctionDef)}
+            for name, expected in functions.items():
+                with self.subTest(path=path, function=name):
+                    self.assertIn(name, found)
+                    body = found[name].body
+                    if (body and isinstance(body[0], ast.Expr)
+                            and isinstance(body[0].value, ast.Constant)
+                            and isinstance(body[0].value.value, str)):
+                        body = body[1:]
+                    self.assertIsInstance(body[0], ast.Return)
+                    self.assertIn(expected, ast.unparse(body[0]))
+
     def test_pending_approval_denied(self):
         path = ROOT / "services/pending_order_execution_service.py"
         tree = ast.parse(path.read_text(encoding="utf-8"))
