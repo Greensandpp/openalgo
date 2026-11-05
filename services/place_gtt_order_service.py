@@ -83,6 +83,10 @@ def place_gtt_order_with_auth(
     broker: str,
     original_data: dict[str, Any],
 ) -> tuple[bool, dict[str, Any], int]:
+    # GreenSoil isolated lab: disallow any broker/order mutation, including internal jobs.
+    from greensoil_lab.read_only import raise_broker_write_blocked
+    raise_broker_write_blocked("place_gtt_order_with_auth")
+
     """Place a GTT using the provided broker auth token."""
     order_request_data = copy.deepcopy(original_data)
     order_request_data.pop("apikey", None)
@@ -210,6 +214,10 @@ def place_gtt_order(
     auth_token: str | None = None,
     broker: str | None = None,
 ) -> tuple[bool, dict[str, Any], int]:
+    # GreenSoil isolated lab: disallow any broker/order mutation, including internal jobs.
+    from greensoil_lab.read_only import raise_broker_write_blocked
+    raise_broker_write_blocked("place_gtt_order")
+
     """Place a GTT trigger.
 
     Supports API-key-based auth (external callers) and direct auth_token+broker
