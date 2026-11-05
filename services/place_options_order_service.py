@@ -49,6 +49,10 @@ def place_single_split_order(
     auth_token: str | None = None,
     broker: str | None = None,
 ) -> dict[str, Any]:
+    # GreenSoil isolated lab: disallow any broker/order mutation, including internal jobs.
+    from greensoil_lab.read_only import raise_broker_write_blocked
+    raise_broker_write_blocked("place_single_split_order")
+
     """
     Place a single split order and return result.
 
@@ -104,6 +108,10 @@ def place_options_order(
     auth_token: str | None = None,
     broker: str | None = None,
 ) -> tuple[bool, dict[str, Any], int]:
+    # GreenSoil isolated lab: disallow any broker/order mutation, including internal jobs.
+    from greensoil_lab.read_only import raise_broker_write_blocked
+    raise_broker_write_blocked("place_options_order")
+
     """
     Place an options order by first resolving the symbol, then placing the order.
     Works in both live and analyze mode.
