@@ -174,6 +174,12 @@ def create_app():
     # Initialize Flask application
     app = Flask(__name__)
 
+    # GreenSoil PAPER lab: reject mutating HTTP before any app route handler.
+    # Background-worker and direct broker guards are still pending; DO NOT DEPLOY.
+    from greensoil_lab.read_only import install_read_only_http_guard
+
+    install_read_only_http_guard(app)
+
     # Initialize SocketIO
     socketio.init_app(app)  # Link SocketIO to the Flask app
 
