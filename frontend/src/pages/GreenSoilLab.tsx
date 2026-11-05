@@ -78,6 +78,9 @@ export default function GreenSoilLab() {
   const [feedStatus, setFeedStatus] = useState('Checking today’s local baseline…')
   const [watchStatus, setWatchStatus] = useState('Intraday watch feed not verified')
   const [watchRows, setWatchRows] = useState<Array<{index:string;status:string;bias?:string;reason?:string;as_of?:string}>>([])
+  const [spikeRows, setSpikeRows] = useState<Array<{index:string;status:string;direction?:string;index_change_pct_delta?:number;as_of?:string}>>([])
+  const [events, setEvents] = useState<string[]>([])
+  const eventKeys = useRef(new Set<string>())
   useEffect(() => {
     let disposed = false
     let controller: AbortController | null = null
@@ -95,16 +98,30 @@ export default function GreenSoilLab() {
         const data = raw as Record<string, unknown>
         if (data.status !== 'WATCH_ONLY' || !Array.isArray(data.warnings) || data.warnings.length !== 2) {
           setWatchRows([])
+          setSpikeRows([])
           setWatchStatus('No verified real-time feed — NO PREDICTION')
           return
         }
         const rows = data.warnings
         if (!rows.every(x => typeof x === 'object' && x !== null && ['NIFTY','SENSEX'].includes((x as Record<string, unknown>).index as string))) throw new Error('Invalid watch indexes')
         setWatchRows(rows as Array<{index:string;status:string;bias?:string;reason?:string;as_of?:string}>)
+        const spikes = Array.isArray(data.spikes) ? data.spikes : []
+        const validSpikes = spikes.filter(x => typeof x === 'object' && x !== null &&
+          ['NIFTY','SENSEX'].includes((x as Record<string, unknown>).index as string))
+          as Array<{index:string;status:string;direction?:string;index_change_pct_delta?:number;as_of?:string}>
+        setSpikeRows(validSpikes)
+        for (const spike of validSpikes) {
+          if (spike.status !== 'EARLY_WARNING_TO_REVIEW') continue
+          const key = [spike.index, spike.as_of, spike.direction].join('|')
+          if (eventKeys.current.has(key)) continue
+          eventKeys.current.add(key)
+          setEvents(current => [`${spike.as_of ?? ''} · ${spike.index} · ${spike.direction ?? ''} · WATCH ONLY`, ...current].slice(0, 20))
+        }
         setWatchStatus('Local index-pressure snapshot received; NEWS AI NOT CONNECTED')
       } catch (err) {
         if (disposed || (err instanceof DOMException && err.name === 'AbortError')) return
         setWatchRows([])
+        setSpikeRows([])
         setWatchStatus('No verified real-time feed — NO PREDICTION')
       }
     }
@@ -209,7 +226,17 @@ export default function GreenSoilLab() {
             </div>
           )) : <p className="text-sm">Feed unavailable; automatic predictions and revised levels disabled.</p>}
         </div>
-        <p className="mt-2 text-xs">No news provider connected. Early warnings are not entries; 5-minute candle confirmation required. No new price targets generated.</p>
+        <div className="mt-3 grid gap-2 sm:grid-cols-2">
+          {spikeRows.map(spike => <div key={spike.index} className="rounded border p-2 text-xs">
+            <strong>{spike.index} spike monitor:</strong> {spike.status}
+            {spike.direction && spike.direction !== 'NONE' && <p>{spike.direction} · Δ {spike.index_change_pct_delta?.toFixed(2) ?? '–'}%</p>}
+          </div>)}
+        </div>
+        <h3 className="mt-3 text-sm font-semibold">Recent verified observation changes (session only)</h3>
+        <div className="max-h-28 overflow-y-auto text-xs" aria-live="polite">
+          {events.length ? events.map(event => <p key={event} className="py-1">{event}</p>) : 'No corroborated spike observations'}
+        </div>
+        <p className="mt-2 text-xs">No news provider connected. Early warnings are not entries; 5-minute candle confirmation required. No new price targets generated. Log remains in this browser tab only.</p>
       </section>
       <ChartView symbol={symbol} baseline={baseline} />
       <p className="text-xs text-muted-foreground">
