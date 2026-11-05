@@ -94,6 +94,10 @@ def place_single_order(
     order_num: int,
     total_orders: int,
 ) -> dict[str, Any]:
+    # GreenSoil isolated lab: disallow any broker/order mutation, including internal jobs.
+    from greensoil_lab.read_only import raise_broker_write_blocked
+    raise_broker_write_blocked("place_single_order")
+
     """
     Place a single order (no per-order event emission - summary event emitted at end)
 
@@ -162,6 +166,10 @@ def place_single_order(
 def split_order_with_auth(
     split_data: dict[str, Any], auth_token: str, broker: str, original_data: dict[str, Any]
 ) -> tuple[bool, dict[str, Any], int]:
+    # GreenSoil isolated lab: disallow any broker/order mutation, including internal jobs.
+    from greensoil_lab.read_only import raise_broker_write_blocked
+    raise_broker_write_blocked("split_order_with_auth")
+
     """
     Split a large order into multiple orders of specified size using provided auth token.
 
@@ -439,6 +447,10 @@ def split_order(
     auth_token: str | None = None,
     broker: str | None = None,
 ) -> tuple[bool, dict[str, Any], int]:
+    # GreenSoil isolated lab: disallow any broker/order mutation, including internal jobs.
+    from greensoil_lab.read_only import raise_broker_write_blocked
+    raise_broker_write_blocked("split_order")
+
     """
     Split a large order into multiple orders of specified size.
     Supports both API-based authentication and direct internal calls.
