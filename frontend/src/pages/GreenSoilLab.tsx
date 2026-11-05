@@ -9,6 +9,11 @@ const OFFSET: Record<LevelName, number> = {
   CE_ENTRY: 15, CE_SL: 5, CE_TP1: 25, CE_TP2: 35, CE_TP3: 45,
   PE_ENTRY: -15, PE_SL: -5, PE_TP1: -25, PE_TP2: -35, PE_TP3: -45,
 }
+type Overlay = {
+  version: number; symbol: IndexSymbol; direction: 'CE'|'PE'
+  status: 'PROPOSED'|'INVALIDATED'; as_of: string; reason: string
+  entry: number; sl: number; tp1: number; tp2: number; tp3: number
+}
 const TIMES = Array.from({ length: 48 }, (_, i) => 1793850600 + i * 300)
 function synthetic(symbol: IndexSymbol) {
   const base = BASE[symbol]
@@ -31,7 +36,7 @@ function zoneColor(zone: Zone): string {
   if (zone.name === 'RESISTANCE') return '#ea580c'
   return '#ca8a04'
 }
-function ChartView({ symbol, baseline }: { symbol: IndexSymbol; baseline: Baseline | null }) {
+function ChartView({ symbol, baseline, overlays }: { symbol: IndexSymbol; baseline: Baseline | null; overlays: Overlay[] }) {
   const host = useRef<HTMLDivElement>(null)
   const instrument = baseline?.instruments[symbol] ?? synthetic(symbol)
   useEffect(() => {
@@ -61,12 +66,22 @@ function ChartView({ symbol, baseline }: { symbol: IndexSymbol; baseline: Baseli
       draw(zone.low, zoneColor(zone))
       draw(zone.high, zoneColor(zone))
     }
+    // Revised intraday levels are a separate purple overlay. Never replace
+    // original 08:30 plan lines or draw invalidated scenarios.
+    if (baseline) {
+      const valid = overlays.filter(x => x.symbol === symbol && x.status === 'PROPOSED')
+      const current = valid.at(-1)
+      if (current) {
+        for (const level of ['entry', 'sl', 'tp1', 'tp2', 'tp3'] as const)
+          draw(current[level], '#a855f7')
+      }
+    }
     chart.fitContent()
     return () => {
       chart.destroy()
       element.innerHTML = ''
     }
-  }, [symbol, baseline])
+  }, [symbol, baseline, overlays])
   return <div ref={host} className="h-[380px] w-full overflow-hidden rounded-md border" />
 }
 export default function GreenSoilLab() {
@@ -81,6 +96,57 @@ export default function GreenSoilLab() {
   const [spikeRows, setSpikeRows] = useState<Array<{index:string;status:string;direction?:string;index_change_pct_delta?:number;as_of?:string}>>([])
   const [events, setEvents] = useState<string[]>([])
   const eventKeys = useRef(new Set<string>())
+  const [overlays, setOverlays] = useState<Overlay[]>([])
+  const [overlayStatus, setOverlayStatus] = useState('No verified intraday revisions')
+  useEffect(() => {
+    let disposed = false
+    let controller: AbortController | null = null
+    const refresh = async () => {
+      controller?.abort()
+      controller = new AbortController()
+      try {
+        const response = await fetch('/greensoil/api/revisions', {
+          method: 'GET', credentials: 'same-origin', cache: 'no-store', signal: controller.signal,
+        })
+        if (disposed) return
+        if (!response.ok) throw new Error('Revisions unavailable')
+        const raw: unknown = await response.json()
+        if (typeof raw !== 'object' || raw === null || Array.isArray(raw)) throw new Error('Invalid revisions')
+        const doc = raw as Record<string, unknown>
+        if (doc.status !== 'WATCH_ONLY' || doc.report_date !== istToday() ||
+            !Array.isArray(doc.revisions) || doc.revisions.length > 50) {
+          setOverlays([])
+          setOverlayStatus('No current verified revisions')
+          return
+        }
+        const rows: Overlay[] = []
+        let previous = 0
+        for (const record of doc.revisions) {
+          if (!record || typeof record !== 'object' || Array.isArray(record)) throw new Error('Invalid revision record')
+          const x = record as Record<string, unknown>
+          if (typeof x.version !== 'number' || !Number.isInteger(x.version) || x.version <= previous ||
+              !['NIFTY', 'SENSEX'].includes(x.symbol as string) ||
+              !['CE','PE'].includes(x.direction as string) ||
+              !['PROPOSED','INVALIDATED'].includes(x.status as string) ||
+              typeof x.as_of !== 'string' || typeof x.reason !== 'string' ||
+              !(['entry','sl','tp1','tp2','tp3'] as const).every(k => typeof x[k] === 'number' && Number.isFinite(x[k]) && (x[k] as number) > 0)) {
+            throw new Error('Revision validation failed')
+          }
+          previous = x.version
+          rows.push(x as Overlay)
+        }
+        setOverlays(rows)
+        setOverlayStatus('Versioned intraday proposals loaded; no order execution')
+      } catch (error) {
+        if (disposed || (error instanceof DOMException && error.name === 'AbortError')) return
+        setOverlays([])
+        setOverlayStatus('Revisions missing/invalid/stale — no live scenario')
+      }
+    }
+    void refresh()
+    const timer = window.setInterval(() => void refresh(), 30_000)
+    return () => { disposed = true; controller?.abort(); window.clearInterval(timer) }
+  }, [])
   useEffect(() => {
     let disposed = false
     let controller: AbortController | null = null
@@ -240,7 +306,19 @@ export default function GreenSoilLab() {
         </div>
         <p className="mt-2 text-xs">No news provider connected. Early warnings are not entries; 5-minute candle confirmation required. No new price targets generated. Log remains in this browser tab only.</p>
       </section>
-      <ChartView symbol={symbol} baseline={baseline} />
+      <section className="rounded-md border p-3" aria-label="Versioned intraday proposals">
+        <h2 className="font-semibold">Intraday revised scenarios (watch only)</h2>
+        <p className="text-xs text-muted-foreground" role="status">{overlayStatus}</p>
+        <p className="text-xs">Original 8:30 baseline remains unchanged. Purple marks = latest proposed levels, not predictions or orders.</p>
+        {overlays.filter(x => x.symbol === symbol).map(x =>
+          <div key={x.version} className="mt-2 rounded border p-2 text-xs">
+            V{x.version} · {x.symbol} {x.direction} · {x.status} · {x.as_of}
+            <div>{x.reason}</div>
+            <div>Entry {x.entry} · SL {x.sl} · TP1 {x.tp1} · TP2 {x.tp2} · TP3 {x.tp3}</div>
+          </div>
+        )}
+      </section>
+      <ChartView symbol={symbol} baseline={baseline} overlays={overlays} />
       <p className="text-xs text-muted-foreground">
         CE green · PE red · PDH/PDL/PDC gray · Support teal · Resistance orange · NO TRADE amber.
         Zone boundaries are lines, not filled areas. Entries are plans, NOT trade signals.
