@@ -25,8 +25,11 @@ jobs:
         run: npx tsc -b --pretty false
       - name: Produce standalone GreenSoil demo bundle
         run: npx vite build --config vite.greensoil-preview.config.ts
-      - name: Ensure preview HTML exists
-        run: test -s dist-greensoil-preview/greensoil-preview.html
+      - name: Verify deploy-ready Pages index
+        run: |
+          cp dist-greensoil-preview/greensoil-preview.html dist-greensoil-preview/index.html
+          test -s dist-greensoil-preview/index.html
+          test -d dist-greensoil-preview/assets
       - name: Upload preview web assets (NOT DEPLOYED)
         uses: actions/upload-artifact@v4
         with:
