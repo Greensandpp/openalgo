@@ -58,3 +58,9 @@ synthetic-data watermark improve phone readability. Live feeds remain absent.
 - Queries about targets and entry fail closed with NO TRADE because no trusted live
   market feed or voice AI model is attached to GitHub Pages.
 - Reduced motion / tab suspension suspend canvas animation.
+
+## V2 mobile QA patch
+
+- Orb touch now emits a visual pulse only, not a simulated microphone ON state.
+- Actual listening is reserved for user-initiated Use mic permission.
+- Mobile reactor reserves space for status below animated sphere to avoid overlap.
