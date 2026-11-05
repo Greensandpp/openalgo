@@ -64,3 +64,9 @@ synthetic-data watermark improve phone readability. Live feeds remain absent.
 - Orb touch now emits a visual pulse only, not a simulated microphone ON state.
 - Actual listening is reserved for user-initiated Use mic permission.
 - Mobile reactor reserves space for status below animated sphere to avoid overlap.
+
+## V3 Obsidian visual refresh
+
+- Midnight graphite/black, warm bronze/gold, and restrained magenta replaces blue-heavy panels.
+- Existing CE/PE chart colors retain their meaning and synthetic-data disclaimer remains visible.
+- No trading execution, private API credentials, or paid services are introduced.
