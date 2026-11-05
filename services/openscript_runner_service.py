@@ -644,6 +644,9 @@ def start_run(
     installed and whether the instrument answers are all the child's to find out,
     and each of them is a sentence in that log naming the script.
     """
+    # GreenSoil lab: strategy subprocesses cannot be started.
+    return False, 'GREENSOIL_LAB_READ_ONLY: strategy runs disabled'
+
     if not is_deployment_id(name) and not is_script_name(name):
         return False, (
             f"{name!r} is not a script name. A name is letters, digits, dot, dash or "
@@ -1281,6 +1284,9 @@ def restore_runs() -> tuple[int, int]:
     because one strategy could not be restored is worse than one that comes up
     and says so.
     """
+    # GreenSoil lab: never restore previously scheduled trading subprocesses.
+    return 0, 0
+
     adopted = 0
     started = 0
     for run_id, held in all_running().items():
