@@ -70,3 +70,9 @@ synthetic-data watermark improve phone readability. Live feeds remain absent.
 - Midnight graphite/black, warm bronze/gold, and restrained magenta replaces blue-heavy panels.
 - Existing CE/PE chart colors retain their meaning and synthetic-data disclaimer remains visible.
 - No trading execution, private API credentials, or paid services are introduced.
+
+## V4 reactor visual implementation
+
+- Refined cinematic holographic reactor with gold/magenta segmented rings, 220 animated glitter particles, sweeps and a hot energy core.
+- Reduced oversized shaded-ball look; compacted phone hero spacing while retaining reduced-motion support.
+- All animation is decorative; microphone mode only starts after explicit Use mic action. Live data remains unavailable.
