@@ -95,3 +95,14 @@ synthetic-data watermark improve phone readability. Live feeds remain absent.
 - HTML import is visual preview ONLY: sandboxed iframe with a restrictive CSP, no scripts, external network or app code execution.
 - A separate Railway Gemini staging gateway has passed a real Gemini 3.5 Flash-Lite one-shot generation check, but is **not yet connected to this static Pages UI**, which has no public authenticated gateway pairing. Do not claim this browser uses a live AI brain.
 - Existing Railway production services, bots and Pine indicators are untouched.
+
+
+## V6.1 — Private Gemini pairing (2026-11-06)
+
+- Isolated Railway gateway successfully generated a real Gemini 3.5 Flash-Lite response.
+- Private staging service domain: https://jarvis-gemini-gateway-staging.up.railway.app/
+- Gateway uses strong separate `GATEWAY_ACCESS_TOKEN` in Railway Variables; Google API key stays server-side.
+- Public website supports manual pairing via Settings. Access token stays in React memory only and is cleared on refresh; never embedded in site JavaScript, repository files, localStorage or exported presets.
+- Authenticated config handshake and chat are limited by strict exact origin, server-side bearer checks, and conservative per-process rate/daily quotas.
+- Market data and news are still unavailable; charts remain synthetic and trade execution disabled.
+- Successful isolated API smoke probe does not prove browser pairing works on every phone; end-to-end mobile QA pending.
