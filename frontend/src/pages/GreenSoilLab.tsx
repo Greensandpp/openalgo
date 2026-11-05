@@ -69,9 +69,8 @@ function ChartView({ symbol, baseline, overlays }: { symbol: IndexSymbol; baseli
     // Revised intraday levels are a separate purple overlay. Never replace
     // original 08:30 plan lines or draw invalidated scenarios.
     if (baseline) {
-      const valid = overlays.filter(x => x.symbol === symbol && x.status === 'PROPOSED')
-      const current = valid.at(-1)
-      if (current) {
+      const current = overlays.filter(x => x.symbol === symbol).at(-1)
+      if (current?.status === 'PROPOSED') {
         for (const level of ['entry', 'sl', 'tp1', 'tp2', 'tp3'] as const)
           draw(current[level], '#a855f7')
       }
