@@ -37,6 +37,10 @@ jobs:
         run: python -m unittest discover -s test -p 'test_greensoil_lab_market_adapter.py' -v
       - name: Test intraday change alerts without trade signals
         run: python -m unittest discover -s test -p 'test_greensoil_lab_spike_detector.py' -v
+      - name: Validate immutable baseline and versioned scenario revisions
+        run: python -m unittest discover -s test -p 'test_greensoil_lab_scenario_revisions.py' -v
+      - name: Check GET-only scenario revision feed
+        run: python -m unittest discover -s test -p 'test_greensoil_lab_revision_source.py' -v
       - name: Verify no broker credentials in CI
         run: |
           test -z "${BROKER_API_KEY:-}"
