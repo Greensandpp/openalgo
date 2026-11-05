@@ -7,6 +7,9 @@ only source code; deploying/activating it requires user approval.
 import hmac
 import json
 import os
+import threading
+import time
+from collections import deque
 import urllib.error
 import urllib.parse
 import urllib.request
@@ -15,6 +18,14 @@ from flask import Flask, jsonify, request
 
 app = Flask(__name__)
 app.config["MAX_CONTENT_LENGTH"] = 16_384
+
+# Conservative single-worker rate limits. Not suitable for public/multi-replica auth.
+_LIMIT_LOCK = threading.Lock()
+_REQUEST_TIMES = deque()
+_DAILY_COUNTS = {"day": None, "count": 0}
+MAX_REQUESTS_PER_MINUTE = 3
+MAX_REQUESTS_PER_DAY = 20
+
 
 SYSTEM_INSTRUCTION = (
     "You are GreenSoil Intelligent, a Tamil/Tanglish/English personal AI assistant. "
@@ -57,6 +68,7 @@ def health():
         "status": "ok",
         "service": "greensoil-gemini-staging",
         "configured": bool(settings["key"] and settings["token"] and settings["origin"]),
+        "model_access_verified": False,
         "live_market_data": False,
         "broker_orders_enabled": False,
     })
@@ -74,6 +86,52 @@ def preflight():
     return response, 204
 
 
+def _authenticated(settings):
+    value = request.headers.get("Authorization", "")
+    if not value.startswith("Bearer "):
+        return False
+    provided = value[7:].strip()
+    return bool(provided) and hmac.compare_digest(provided, settings["token"])
+
+
+def _reserve_quota():
+    """Atomic quota counter; rejects before provider API invocation."""
+    now = time.time()
+    day = int(now // 86400)
+    with _LIMIT_LOCK:
+        if _DAILY_COUNTS["day"] != day:
+            _DAILY_COUNTS["day"] = day
+            _DAILY_COUNTS["count"] = 0
+        while _REQUEST_TIMES and now - _REQUEST_TIMES[0] >= 60:
+            _REQUEST_TIMES.popleft()
+        if len(_REQUEST_TIMES) >= MAX_REQUESTS_PER_MINUTE:
+            return "minute_quota_exhausted"
+        if _DAILY_COUNTS["count"] >= MAX_REQUESTS_PER_DAY:
+            return "daily_quota_exhausted"
+        _REQUEST_TIMES.append(now)
+        _DAILY_COUNTS["count"] += 1
+    return None
+
+
+@app.get("/api/config")
+def config_status():
+    """Only safe readiness data; never returns secrets."""
+    settings = _settings()
+    if not all((settings["key"], settings["token"], settings["origin"])):
+        return _reply({"error": "gateway_not_configured"}, 503)
+    if request.headers.get("Origin") != settings["origin"] or not _authenticated(settings):
+        return _reply({"error": "unauthorized"}, 401)
+    return _reply({
+        "model": settings["model"],
+        "max_requests_per_minute": MAX_REQUESTS_PER_MINUTE,
+        "max_requests_per_day": MAX_REQUESTS_PER_DAY,
+        "model_access_verified": False,
+        "live_news_connected": False,
+        "live_market_connected": False,
+        "orders_enabled": False,
+    })
+
+
 @app.post("/api/chat")
 def chat():
     settings = _settings()
@@ -81,8 +139,7 @@ def chat():
         return _reply({"error": "gateway_not_configured"}, 503)
     if request.headers.get("Origin") != settings["origin"]:
         return _reply({"error": "origin_not_allowed"}, 403)
-    provided = request.headers.get("Authorization", "").removeprefix("Bearer ").strip()
-    if not provided or not hmac.compare_digest(provided, settings["token"]):
+    if not _authenticated(settings):
         return _reply({"error": "unauthorized"}, 401)
 
     payload = request.get_json(silent=True)
@@ -107,6 +164,9 @@ def chat():
     # Model name is configurable; access and free-tier support require verification.
     if not model or any(ch not in "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-._" for ch in model):
         return _reply({"error": "invalid_model_configuration"}, 503)
+    denied = _reserve_quota()
+    if denied:
+        return _reply({"error": denied, "retry_later": True}, 429)
     url = "https://generativelanguage.googleapis.com/v1beta/models/" + urllib.parse.quote(model, safe="") + ":generateContent"
     body = json.dumps({
         "systemInstruction": {"parts": [{"text": SYSTEM_INSTRUCTION}]},
