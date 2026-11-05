@@ -965,6 +965,15 @@ class OrdersToolkit(OpenAlgoToolkit):
             RetryAgentRun: When validation rejects an argument the model can
                 correct. Nothing has been dispatched at that point.
         """
+        # GreenSoil isolated lab: refuse agent mutations before planning or dispatch.
+        # Independent of model confirmation, analyzer mode or agent permissions.
+        return self.to_json({
+            "status": "blocked",
+            "code": "GREENSOIL_LAB_READ_ONLY",
+            "message": "AI agent broker writes are forbidden in this lab.",
+            "tool": tool,
+        })
+
         attempt_id = self.audit_attempt(tool, args)
 
         try:
