@@ -80,7 +80,8 @@ def gate_candidate(
     o, h, l, c = (_finite(candle.get(key), key) for key in ("open", "high", "low", "close"))
     if not l <= min(o, c) <= max(o, c) <= h:
         raise ValueError("OHLC is inconsistent")
-    if (last["direction"] == "CE" and c <= o) or (last["direction"] == "PE" and c >= o):
+    if ((last["direction"] == "CE" and (c <= o or c < last["entry"])) or
+            (last["direction"] == "PE" and (c >= o or c > last["entry"]))):
         return {"status": "NO_TRADE_CANDLE_NOT_CONFIRMED", "proposals": [], "execution": "DISABLED"}
     # A supplied proposed trigger cannot already be beyond TP1 on the
     # confirmation candle. Refuse to display an obsolete chase setup.
