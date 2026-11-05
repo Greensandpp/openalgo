@@ -6,7 +6,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 
 export type CoreMode = 'idle' | 'listening' | 'thinking' | 'processing' | 'completed' | 'speaking'
 type Dot = { phase: number; orbit: number; radius: number; speed: number; size: number; layer: number }
-const DOT_COUNT = 380
+const DOT_COUNT = 800
 const DOTS: Dot[] = Array.from({ length: DOT_COUNT }, (_, i) => ({
   phase: i * 2.3999632, orbit: 20 + (i * 47.7) % 114,
   radius: 0.28 + ((i * 19) % 70) / 100,
@@ -15,8 +15,8 @@ const DOTS: Dot[] = Array.from({ length: DOT_COUNT }, (_, i) => ({
   layer: i % 3,
 }))
 
-export function ReactiveCore({ mode, reducedMotion, onTouch }: {
-  mode: CoreMode; reducedMotion: boolean; onTouch: () => void
+export function ReactiveCore({ mode, reducedMotion, onTouch, particleCount = DOT_COUNT }: {
+  mode: CoreMode; reducedMotion: boolean; onTouch: () => void; particleCount?: number
 }) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const modeRef = useRef(mode)
@@ -47,7 +47,7 @@ export function ReactiveCore({ mode, reducedMotion, onTouch }: {
       context.arc(center, center, 137, 0, Math.PI * 2)
       context.fill()
 
-      for (const dot of DOTS) {
+      for (const dot of DOTS.slice(0, Math.min(Math.max(particleCount, 80), 800))) {
         const a = dot.phase + t * dot.speed * boost * (dot.layer === 1 ? -1 : 1)
         const phi = dot.phase * .63 + t * .13
         const dx = Math.cos(a) * dot.orbit
@@ -169,7 +169,7 @@ export function ReactiveCore({ mode, reducedMotion, onTouch }: {
       cancelAnimationFrame(frame)
       document.removeEventListener('visibilitychange', resume)
     }
-  }, [reducedMotion])
+  }, [reducedMotion, particleCount])
 
   const activate = useCallback(() => {
     onTouch()
