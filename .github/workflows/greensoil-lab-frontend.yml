@@ -23,3 +23,5 @@ jobs:
         run: npm ci --ignore-scripts --no-audit --no-fund
       - name: Check TypeScript types
         run: npx tsc -b --pretty false
+      - name: Test 8:30 report JSON validation
+        run: npx vitest run src/lib/greensoilBaseline.test.ts
