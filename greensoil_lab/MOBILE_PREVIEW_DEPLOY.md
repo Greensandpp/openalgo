@@ -76,3 +76,10 @@ synthetic-data watermark improve phone readability. Live feeds remain absent.
 - Refined cinematic holographic reactor with gold/magenta segmented rings, 220 animated glitter particles, sweeps and a hot energy core.
 - Reduced oversized shaded-ball look; compacted phone hero spacing while retaining reduced-motion support.
 - All animation is decorative; microphone mode only starts after explicit Use mic action. Live data remains unavailable.
+
+## V5 selected core — Plasma
+
+- User chose #12 Plasma Core rather than flat 2D cartoon styling.
+- Live canvas draws 380 orange/gold glitter particles, moving curved plasma filaments and segmented holographic orbits; CSS enhances core depth.
+- Supports existing IDLE/LISTENING/THINKING/SPEAKING; renderer includes future PROCESSING/COMPLETED presentation modes. No real AI engine or market-data claims.
+- Static Pages read-only PAPER demo only; production services untouched.
