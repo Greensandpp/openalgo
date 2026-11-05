@@ -25,6 +25,8 @@ _REQUEST_TIMES = deque()
 _DAILY_COUNTS = {"day": None, "count": 0}
 MAX_REQUESTS_PER_MINUTE = 3
 MAX_REQUESTS_PER_DAY = 20
+_AUTH_FAILURES = deque()
+MAX_AUTH_FAILURES_PER_MINUTE = 30
 
 
 SYSTEM_INSTRUCTION = (
@@ -75,23 +77,34 @@ def health():
 
 
 @app.route("/api/chat", methods=["OPTIONS"])
+@app.route("/api/config", methods=["OPTIONS"])
 def preflight():
     origin = _settings()["origin"]
     if not origin or request.headers.get("Origin") != origin:
         return _reply({"error": "origin_not_allowed"}, 403)
     response, _ = _reply({}, 204)
-    response.headers["Access-Control-Allow-Methods"] = "POST, OPTIONS"
+    response.headers["Access-Control-Allow-Methods"] = "GET, POST, OPTIONS"
     response.headers["Access-Control-Allow-Headers"] = "Authorization, Content-Type"
     response.headers["Access-Control-Max-Age"] = "300"
     return response, 204
 
 
 def _authenticated(settings):
+    # One-worker brute-force guard; the access token is generated privately and
+    # never bundled in public JS, while CORS limits allowed browser origins.
+    now = time.time()
+    with _LIMIT_LOCK:
+        while _AUTH_FAILURES and now - _AUTH_FAILURES[0] >= 60:
+            _AUTH_FAILURES.popleft()
+        if len(_AUTH_FAILURES) >= MAX_AUTH_FAILURES_PER_MINUTE:
+            return False
     value = request.headers.get("Authorization", "")
-    if not value.startswith("Bearer "):
-        return False
-    provided = value[7:].strip()
-    return bool(provided) and hmac.compare_digest(provided, settings["token"])
+    valid = value.startswith("Bearer ") and bool(value[7:].strip())
+    valid = valid and hmac.compare_digest(value[7:].strip(), settings["token"])
+    if not valid:
+        with _LIMIT_LOCK:
+            _AUTH_FAILURES.append(now)
+    return bool(valid)
 
 
 def _reserve_quota():
@@ -178,7 +191,7 @@ def chat():
         headers={"Content-Type": "application/json", "x-goog-api-key": settings["key"]},
     )
     try:
-        with urllib.request.urlopen(req, timeout=12) as remote:
+        with urllib.request.urlopen(req, timeout=30) as remote:
             answer_json = json.load(remote)
         parts = answer_json.get("candidates", [{}])[0].get("content", {}).get("parts", [])
         answer = " ".join(p.get("text", "") for p in parts if isinstance(p, dict)).strip()
