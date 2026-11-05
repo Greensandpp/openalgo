@@ -65,6 +65,10 @@ def import_broker_module(broker_name: str) -> Any | None:
 def cancel_all_orders_with_auth(
     order_data: dict[str, Any], auth_token: str, broker: str, original_data: dict[str, Any]
 ) -> tuple[bool, dict[str, Any], int]:
+    # GreenSoil isolated lab: disallow any broker/order mutation, including internal jobs.
+    from greensoil_lab.read_only import raise_broker_write_blocked
+    raise_broker_write_blocked("cancel_all_orders_with_auth")
+
     """
     Cancel all orders using provided auth token.
 
@@ -188,6 +192,10 @@ def cancel_all_orders(
     auth_token: str | None = None,
     broker: str | None = None,
 ) -> tuple[bool, dict[str, Any], int]:
+    # GreenSoil isolated lab: disallow any broker/order mutation, including internal jobs.
+    from greensoil_lab.read_only import raise_broker_write_blocked
+    raise_broker_write_blocked("cancel_all_orders")
+
     """
     Cancel all open orders.
     Supports both API-based authentication and direct internal calls.
