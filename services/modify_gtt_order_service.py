@@ -44,6 +44,10 @@ def modify_gtt_order_with_auth(
     broker: str,
     original_data: dict[str, Any],
 ) -> tuple[bool, dict[str, Any], int]:
+    # GreenSoil isolated lab: disallow any broker/order mutation, including internal jobs.
+    from greensoil_lab.read_only import raise_broker_write_blocked
+    raise_broker_write_blocked("modify_gtt_order_with_auth")
+
     order_request_data = copy.deepcopy(original_data)
     order_request_data.pop("apikey", None)
     api_key = original_data.get("apikey", "")
@@ -152,6 +156,10 @@ def modify_gtt_order(
     auth_token: str | None = None,
     broker: str | None = None,
 ) -> tuple[bool, dict[str, Any], int]:
+    # GreenSoil isolated lab: disallow any broker/order mutation, including internal jobs.
+    from greensoil_lab.read_only import raise_broker_write_blocked
+    raise_broker_write_blocked("modify_gtt_order")
+
     original_data = copy.deepcopy(order_data)
     if api_key:
         original_data["apikey"] = api_key
