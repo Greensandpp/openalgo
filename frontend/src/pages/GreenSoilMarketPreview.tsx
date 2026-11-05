@@ -66,7 +66,7 @@ export default function GreenSoilMarketPreview() {
   const [preset, setPreset] = useState<Preset>(DEFAULT_PRESET)
   const [htmlPreview, setHtmlPreview] = useState<string | null>(null)
   const [themeNotice, setThemeNotice] = useState('')
-  const [gatewayUrl, setGatewayUrl] = useState('')
+  const [gatewayUrl, setGatewayUrl] = useState('https://jarvis-gemini-gateway-staging.up.railway.app/')
   const [gatewayToken, setGatewayToken] = useState('')
   const [gatewayConnected, setGatewayConnected] = useState(false)
   const [gatewayStatus, setGatewayStatus] = useState('Private Gemini staging pairing pending')
