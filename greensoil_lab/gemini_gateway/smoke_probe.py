@@ -1,6 +1,6 @@
 """Private, one-shot Gemini model connectivity check on Railway STAGING startup.
 
-Invokes read-only listModels then ONE short generation on Gemini 3.8 Flash
+Invokes read-only listModels then ONE short generation on Gemini 3.5 Flash-Lite
 only when model listing advertises generateContent. The probe never logs the
 API key, model output or provider bodies, and doesn't accept public input.
 A nonzero API error still starts the fail-closed staging HTTP service.
@@ -10,7 +10,7 @@ import os
 import urllib.error
 import urllib.request
 
-MODEL = "gemini-3.8-flash"
+MODEL = "gemini-3.5-flash-lite"
 BASE = "https://generativelanguage.googleapis.com/v1beta/models/"
 
 
@@ -45,7 +45,7 @@ def probe(fetch=None, emit=print):
             BASE + MODEL + ":generateContent", data=payload, method="POST",
             headers={"x-goog-api-key": key, "Content-Type": "application/json"},
         )
-        with opener(request, timeout=50) as response:
+        with opener(request, timeout=30) as response:
             result = json.load(response)
         valid = isinstance(result.get("candidates"), list) and bool(result["candidates"])
         emit("GEMINI_SMOKE: generation_" + ("success" if valid else "empty"))
