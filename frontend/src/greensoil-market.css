@@ -121,3 +121,56 @@
  .gs-zone-list{grid-template-columns:1fr}
  .gs-zone-tile{flex-direction:row;align-items:center;justify-content:space-between}
 }
+
+
+/* V2 reactive particle energy core. Responsive and accessible, no WebGL or microphone. */
+.gs-reactor{width:min(360px,100%);height:350px;position:relative;display:grid;place-items:center}
+.gs-reactor-touch{position:relative;width:320px;height:320px;display:block;border:0;background:transparent;cursor:pointer;isolation:isolate;touch-action:manipulation;border-radius:50%;outline-offset:4px}
+.gs-reactor-touch:focus-visible{outline:2px solid #75f6ed}
+.gs-particle-canvas{position:absolute;inset:0;width:100%;height:100%;z-index:4;pointer-events:none}
+.gs-reactor-halo{position:absolute;inset:18px;border-radius:50%;background:radial-gradient(circle,#74efff22 0%,#464fff0a 38%,transparent 70%);box-shadow:0 0 78px #22def42a;animation:gs-reactor-breathe 4s ease-in-out infinite}
+.gs-reactor-orbit{position:absolute;z-index:2;left:50%;top:50%;width:260px;height:260px;margin:-130px;border-radius:50%;border:1px solid #73ebff98;box-shadow:0 0 21px #1fcffa68,inset 0 0 15px #90fbff11;transform-style:preserve-3d}
+.gs-reactor-orbit-a{transform:rotateX(72deg) rotateZ(18deg);animation:gs-reactor-orbit-a 11s linear infinite}
+.gs-reactor-orbit-b{width:280px;height:280px;margin:-140px;border-color:#b29cff90;transform:rotateY(70deg) rotateZ(38deg);animation:gs-reactor-orbit-b 16s linear infinite}
+.gs-reactor-orbit-c{width:238px;height:238px;margin:-119px;border:2px dotted #a3f8fc6e;transform:rotateX(42deg) rotateY(59deg);animation:gs-reactor-orbit-c 15s linear infinite}
+.gs-reactor-sphere{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:178px;height:178px;border-radius:50%;overflow:hidden;z-index:3;
+ background:radial-gradient(circle at 35% 23%,#ddfeff 0%,#8af3ff 6%,#268ab8 22%,#121e6a 51%,#050b2e 75%,#02050f 100%);
+ border:1px solid #a3fdffd3;box-shadow:inset -28px -22px 50px #000b2bd9,inset 12px 14px 35px #d3ffff5a,0 0 34px #54e8ff86,0 0 88px #7158ef4c}
+.gs-reactor-mesh{position:absolute;inset:-40%;background:repeating-conic-gradient(from 5deg,#b1efff38 0 1deg,transparent 2deg 13deg);mix-blend-mode:screen;animation:gs-reactor-mesh 15s linear infinite}
+.gs-reactor-eye{position:absolute;left:35%;top:30%;width:58px;height:58px;border-radius:50%;background:#d6ffff;filter:blur(24px);opacity:.64;animation:gs-reactor-breathe 3s ease-in-out infinite}
+.gs-reactor-flash{position:absolute;inset:42px;border-radius:50%;z-index:5;pointer-events:none;border:2px solid transparent;opacity:0}
+.gs-touched .gs-reactor-flash{animation:gs-reactor-touch .7s ease-out 1}
+.gs-reactor-status{position:absolute;bottom:0;display:flex;align-items:center;justify-content:center;gap:8px;color:#d1edfa;letter-spacing:.15em;font-size:10px;font-weight:700;text-align:center}
+.gs-reactor-status span:last-child{color:#7791af;font-size:8px;font-weight:500}
+.gs-reactor-live{height:7px;width:7px;border-radius:50%;background:#6ff7e7;box-shadow:0 0 9px #6ff7e7}
+.gs-reactor-listening .gs-reactor-live{background:#78ffc9}
+.gs-reactor-thinking .gs-reactor-live{background:#c7a9ff}
+.gs-reactor-speaking .gs-reactor-live{background:#64e8ff}
+.gs-reactor-listening .gs-reactor-halo{animation-duration:1.25s;filter:hue-rotate(22deg)}
+.gs-reactor-thinking .gs-reactor-orbit-a,.gs-reactor-thinking .gs-reactor-orbit-b{animation-duration:3.4s}
+.gs-reactor-speaking .gs-reactor-sphere{animation:gs-reactor-voice .46s ease-in-out infinite alternate}
+.gs-reactor-speaking .gs-reactor-halo{animation-duration:.7s}
+@keyframes gs-reactor-breathe{50%{opacity:.72;transform:scale(1.12)}}
+@keyframes gs-reactor-orbit-a{to{transform:rotateX(72deg) rotateZ(378deg)}}
+@keyframes gs-reactor-orbit-b{to{transform:rotateY(70deg) rotateZ(398deg)}}
+@keyframes gs-reactor-orbit-c{to{transform:rotateX(42deg) rotateY(419deg)}}
+@keyframes gs-reactor-mesh{to{transform:rotate(360deg)}}
+@keyframes gs-reactor-touch{0%{opacity:.85;border-color:#e8ffff;transform:scale(.7)}100%{opacity:0;border-color:#54ecff;transform:scale(1.35)}}
+@keyframes gs-reactor-voice{to{transform:translate(-50%,-50%) scale(1.08);box-shadow:inset -28px -22px 50px #000b2bd9,0 0 60px #65f5ffbb,0 0 120px #735cff72}}
+.gs-motion-off .gs-reactor-touch *{animation:none!important;transition:none!important}
+.gs-voice-demo{border:1px solid #66c6fc33;border-radius:18px;padding:clamp(15px,2vw,25px);margin:16px 0 0;background:linear-gradient(140deg,#101f34d9,#11122a99);box-shadow:0 10px 40px #0003}
+.gs-voice-heading{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.gs-voice-heading h2{font-size:clamp(16px,2vw,21px);font-weight:700;margin-top:5px}
+.gs-voice-heading h2 small{color:#8acff4;font-size:10px}
+.gs-voice-eyebrow{color:#7b96b8;letter-spacing:.16em;font-size:10px;font-weight:650}
+.gs-voice-stop{border:1px solid #9ab6d455;border-radius:9px;padding:8px 11px;color:#d5eafe;font-size:11px;background:#101a2c}
+.gs-voice-note,.gs-voice-disclaimer{font-size:11px;line-height:1.7;color:#93afc4;margin:12px 0}
+.gs-voice-form{display:flex;gap:8px;align-items:end;flex-wrap:wrap}
+.gs-voice-input-label{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+.gs-voice-form input{flex:1;min-width:180px;border-radius:10px;border:1px solid #547eac88;background:#07152a;color:#f4fcff;padding:11px 12px;font-size:13px;outline-offset:2px}
+.gs-voice-form input:focus-visible{outline:2px solid #79ecfa}
+.gs-voice-form button{border-radius:10px;background:#6de8f5;color:#031321;font-size:12px;font-weight:750;padding:12px 15px}
+.gs-voice-reply{border-left:2px solid #63e9ef;background:#092139a1;padding:11px 13px;margin-top:13px;border-radius:0 10px 10px 0;color:#dbf7fc;font-size:12px;line-height:1.6}
+.gs-voice-disclaimer{font-size:10px;color:#91adc1;margin-bottom:0}
+@media(max-width:720px){.gs-reactor{height:270px}.gs-reactor-touch{transform:scale(.76)}.gs-reactor-status{bottom:4px}.gs-voice-form button{flex:0 0 auto}}
+@media(prefers-reduced-motion:reduce){.gs-reactor *{animation:none!important;transition:none!important}}
