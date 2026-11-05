@@ -2,6 +2,20 @@
  * Orb is decorative CSS 3D-style motion, NOT a working AI/model feed.
  */
 import { useEffect, useRef, useState } from 'react'
+
+/** Browser speech recognition is opt-in and may use a device/browser service. */
+type VoiceResult = { results: ArrayLike<ArrayLike<{transcript: string}>> }
+type VoiceRecognizer = {
+  lang: string; interimResults: boolean
+  onresult: ((event: VoiceResult) => void) | null
+  onerror: (() => void) | null
+  onend: (() => void) | null
+  start(): void; stop(): void
+}
+type SpeechWindow = Window & {
+  SpeechRecognition?: new () => VoiceRecognizer
+  webkitSpeechRecognition?: new () => VoiceRecognizer
+}
 import GreenSoilLab from './GreenSoilLab'
 import { ReactiveCore, type CoreMode } from './GreenSoilReactiveCore'
 
@@ -19,9 +33,13 @@ export default function GreenSoilMarketPreview() {
   const [answer, setAnswer] = useState('Tap the core for a visual reaction. Ask a question for an offline demo reply.')
   const [speechSupported, setSpeechSupported] = useState(false)
   const activeSpeech = useRef(false)
+  const recognizer = useRef<VoiceRecognizer | null>(null)
+  const [micSupported, setMicSupported] = useState(false)
   useEffect(() => {
     setSpeechSupported('speechSynthesis' in window)
-    return () => { if ('speechSynthesis' in window) window.speechSynthesis.cancel() }
+    const voiceWindow = window as SpeechWindow
+    setMicSupported(Boolean(voiceWindow.SpeechRecognition || voiceWindow.webkitSpeechRecognition))
+    return () => { recognizer.current?.stop(); if ('speechSynthesis' in window) window.speechSynthesis.cancel() }
   }, [])
   const respond = (prompt: string) => {
     const reply = safeDemoAnswer(prompt)
@@ -43,7 +61,45 @@ export default function GreenSoilMarketPreview() {
     setMode('listening')
     setAnswer('Core activated. This is a visual listening simulation. Type a question below for the demo voice response.')
   }
+  const startMic = () => {
+    const voiceWindow = window as SpeechWindow
+    const Constructor = voiceWindow.SpeechRecognition || voiceWindow.webkitSpeechRecognition
+    if (!Constructor) {
+      setAnswer('Mic recognition not supported in this browser. Type your question instead.')
+      return
+    }
+    recognizer.current?.stop()
+    if ('speechSynthesis' in window) window.speechSynthesis.cancel()
+    const instance = new Constructor()
+    recognizer.current = instance
+    instance.lang = 'en-IN'
+    instance.interimResults = false
+    instance.onresult = event => {
+      const phrase = event.results[0]?.[0]?.transcript ?? ''
+      if (!phrase) { setMode('idle'); return }
+      setQuestion(phrase)
+      respond(phrase)
+    }
+    instance.onerror = () => {
+      setMode('idle')
+      setAnswer('Voice recognition unavailable or permission denied. Type a question instead.')
+    }
+    instance.onend = () => {
+      if (recognizer.current === instance) recognizer.current = null
+      setMode(previous => previous === 'listening' ? 'idle' : previous)
+    }
+    try {
+      setMode('listening')
+      setAnswer('Browser microphone listening. Speak your question. No live NSE data connected.')
+      instance.start()
+    } catch {
+      setMode('idle')
+      setAnswer('Could not start microphone. Type a question instead.')
+    }
+  }
   const stop = () => {
+    recognizer.current?.stop()
+    recognizer.current = null
     if ('speechSynthesis' in window) window.speechSynthesis.cancel()
     activeSpeech.current = false
     setMode('idle')
@@ -93,9 +149,10 @@ export default function GreenSoilMarketPreview() {
             <input id="gs-voice-query" value={question} onChange={event => setQuestion(event.target.value)}
               placeholder="Next target enna?" autoComplete="off" maxLength={180} />
             <button type="submit">Ask &amp; Speak</button>
+            <button className="gs-voice-mic" type="button" disabled={!micSupported} onClick={startMic}>🎙 {micSupported ? 'Use mic' : 'Mic unavailable'}</button>
           </form>
           <div className="gs-voice-reply" role="status" aria-live="polite">{answer}</div>
-          <div className="gs-voice-disclaimer">{speechSupported ? 'Browser speech output available. Mic recognition is not enabled yet.' : 'Browser speech output unavailable; text reply still works.'} AI agent, voice recognition, and live feed are not connected.</div>
+          <div className="gs-voice-disclaimer">{speechSupported ? 'Browser speech output available. Mic transcription depends on browser support and may use its speech service.' : 'Browser speech output unavailable; text reply still works.'} Real AI agent and live feed are not connected; microphone only transcribes with explicit permission.</div>
         </section>
         <div className="gs-section-heading">
           <div><small>01 / CHART INTELLIGENCE</small><h2>Market workspace</h2></div>
