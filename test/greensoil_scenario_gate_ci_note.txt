@@ -1,0 +1,1 @@
+Scenario gate synthetic tests exist; dedicated CI registration pending connector reliability.
