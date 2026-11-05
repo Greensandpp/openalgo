@@ -1,0 +1,36 @@
+name: GreenSoil Mobile Preview Bundle
+on:
+  push:
+    branches:
+      - greens-oil/paper-lab
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  isolated-preview:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - name: Install locked packages with scripts disabled
+        run: npm ci --ignore-scripts --no-audit --no-fund
+      - name: Type check
+        run: npx tsc -b --pretty false
+      - name: Produce standalone GreenSoil demo bundle
+        run: npx vite build --config vite.greensoil-preview.config.ts
+      - name: Ensure preview HTML exists
+        run: test -s dist-greensoil-preview/greensoil-preview.html
+      - name: Upload preview web assets (NOT DEPLOYED)
+        uses: actions/upload-artifact@v4
+        with:
+          name: greensoil-mobile-preview-demo
+          path: frontend/dist-greensoil-preview/
+          if-no-files-found: error
+          retention-days: 7
