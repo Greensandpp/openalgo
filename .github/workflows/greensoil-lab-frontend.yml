@@ -1,0 +1,25 @@
+name: GreenSoil Lab Frontend Gate
+on:
+  push:
+    branches:
+      - greens-oil/paper-lab
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  frontend:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+      - name: Install locked frontend packages
+        run: npm ci --ignore-scripts --no-audit --no-fund
+      - name: Check TypeScript types
+        run: npx tsc -b --pretty false
