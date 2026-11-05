@@ -45,6 +45,8 @@ jobs:
         run: python -m unittest discover -s test -p 'test_greensoil_lab_scenario_gate.py' -v
       - name: Validate isolated Gemini gateway security and quotas without network
         run: python -m unittest discover -s test -p 'test_greensoil_gemini_gateway.py' -v
+      - name: Test Gemini model-list probe offline without secrets or API calls
+        run: python -m unittest discover -s test -p 'test_greensoil_gemini_model_listing.py' -v
       - name: Verify no broker credentials in CI
         run: |
           test -z "${BROKER_API_KEY:-}"
