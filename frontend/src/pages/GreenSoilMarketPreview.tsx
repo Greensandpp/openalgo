@@ -66,6 +66,11 @@ export default function GreenSoilMarketPreview() {
   const [preset, setPreset] = useState<Preset>(DEFAULT_PRESET)
   const [htmlPreview, setHtmlPreview] = useState<string | null>(null)
   const [themeNotice, setThemeNotice] = useState('')
+  const [gatewayUrl, setGatewayUrl] = useState('')
+  const [gatewayToken, setGatewayToken] = useState('')
+  const [gatewayConnected, setGatewayConnected] = useState(false)
+  const [gatewayStatus, setGatewayStatus] = useState('Private Gemini staging pairing pending')
+  const [askingGemini, setAskingGemini] = useState(false)
   const micRef = useRef<VoiceRecognizer | null>(null)
   const timersRef = useRef<number[]>([])
   const fileRef = useRef<HTMLInputElement>(null)
@@ -124,6 +129,62 @@ export default function GreenSoilMarketPreview() {
       timersRef.current.push(window.setTimeout(() => speak(reply), reducedMotion ? 50 : 450))
     }, reducedMotion ? 50 : 620))
   }
+  const validGatewayUrl = (value: string) => {
+    try {
+      const u = new URL(value)
+      return u.protocol === 'https:' &&
+        u.hostname.endsWith('.up.railway.app') &&
+        u.pathname === '/' && !u.search && !u.hash
+    } catch { return false }
+  }
+  const pairGateway = async () => {
+    if (!validGatewayUrl(gatewayUrl) || gatewayToken.length < 32 || gatewayToken.length > 200) {
+      setGatewayStatus('Invalid secure Railway URL or private access token.')
+      return
+    }
+    setGatewayStatus('Checking private gateway...')
+    try {
+      const response = await fetch(gatewayUrl.replace(/\/$/, '') + '/api/config', {
+        method: 'GET',
+        headers: { Authorization: 'Bearer ' + gatewayToken },
+        cache: 'no-store', credentials: 'omit',
+        signal: AbortSignal.timeout(12000),
+      })
+      if (!response.ok) throw Error('Gateway authorization failed (' + response.status + ')')
+      const doc: unknown = await response.json()
+      if (!doc || typeof doc !== 'object' || (doc as {orders_enabled?: unknown}).orders_enabled !== false) {
+        throw Error('Gateway safety status could not be verified')
+      }
+      setGatewayConnected(true)
+      setGatewayStatus('Paired with private staging Gemini gateway. Requests limited.')
+    } catch {
+      setGatewayConnected(false)
+      setGatewayStatus('Pairing failed. Check URL, token, gateway availability and browser permissions.')
+    }
+  }
+  const askGemini = async (input: string) => {
+    if (!gatewayConnected || askingGemini || !validGatewayUrl(gatewayUrl)) return
+    setAskingGemini(true); setMode('thinking')
+    setAnswer('Private Gemini Flash-Lite reasoning...')
+    try {
+      const response = await fetch(gatewayUrl.replace(/\/$/, '') + '/api/chat', {
+        method: 'POST',
+        headers: { Authorization: 'Bearer ' + gatewayToken, 'Content-Type': 'application/json' },
+        body: JSON.stringify({message: input}),
+        cache: 'no-store', credentials: 'omit',
+        signal: AbortSignal.timeout(35000),
+      })
+      const doc: unknown = await response.json()
+      if (!response.ok || !doc || typeof doc !== 'object' ||
+          typeof (doc as {answer?: unknown}).answer !== 'string') {
+        throw Error('No safe AI reply')
+      }
+      transition((doc as {answer:string}).answer.slice(0,1800))
+    } catch {
+      setMode('idle')
+      setAnswer('Gemini gateway unavailable, unauthorized, or daily quota reached. No live signals.')
+    } finally { setAskingGemini(false) }
+  }
   const execute = (input: string) => {
     const q = input.trim()
     if (!q) return
@@ -142,7 +203,8 @@ export default function GreenSoilMarketPreview() {
     } else if (/(target|entry|sl|stop.loss|buy|sell|reversal|premium|option)/i.test(x)) {
       transition('Verified NSE and options feeds unavailable. No target or new entry confirmation. NO TRADE.')
     } else {
-      transition('Gemini AI staging test succeeded, but public AI chat pairing is not yet enabled. This interface currently supports local voice commands only.')
+      if (gatewayConnected) void askGemini(q)
+      else transition('Gemini AI staging verified. Connect your private gateway in Settings for conversational AI. Local commands work offline.')
     }
   }
   const startMic = () => {
@@ -240,6 +302,23 @@ export default function GreenSoilMarketPreview() {
           <input ref={fileRef} type="file" accept=".json,.html,.htm" hidden onChange={e=>void importTheme(e.currentTarget.files?.[0])}/>
           <button type="button" onClick={exportTheme}>Export preset</button>
           <button type="button" onClick={()=>{setPreset(DEFAULT_PRESET);setHtmlPreview(null);try{localStorage.removeItem(LOCAL_KEY)}catch{/* optional */}setThemeNotice('Original theme restored.')}}>Reset</button>
+        </div>
+        <div className="gs-jarvis-gateway-settings">
+          <strong>Gemini AI — Private staging pairing</strong>
+          <p>Never paste Google Gemini API keys here. Enter only the separate private Railway gateway access token. Token stays in page memory and is cleared on reload.</p>
+          <label className="gs-jarvis-gateway-label" htmlFor="gs-gateway-url">Railway HTTPS URL</label>
+          <input id="gs-gateway-url" inputMode="url" autoComplete="off"
+            placeholder="https://your-gateway.up.railway.app/"
+            value={gatewayUrl} onChange={e=>{setGatewayConnected(false);setGatewayUrl(e.target.value)}} />
+          <label className="gs-jarvis-gateway-label" htmlFor="gs-gateway-token">Private gateway access token (not Gemini key)</label>
+          <input id="gs-gateway-token" type="password" autoComplete="off"
+            placeholder="Enter private Railway gateway token"
+            value={gatewayToken} onChange={e=>{setGatewayConnected(false);setGatewayToken(e.target.value)}} />
+          <div className="gs-jarvis-settings-actions">
+            <button type="button" onClick={()=>void pairGateway()}>Connect Gemini</button>
+            <button type="button" onClick={()=>{setGatewayConnected(false);setGatewayToken('');setGatewayStatus('Disconnected. Token cleared.')}}>Disconnect</button>
+          </div>
+          <p role="status" className="gs-jarvis-theme-notice">{gatewayStatus}</p>
         </div>
         <p className="gs-jarvis-theme-notice" role="status">{themeNotice || `Theme: ${preset.name} · ${preset.particleCount} particles`}</p>
         {htmlPreview && <iframe sandbox="" title="Untrusted HTML design preview, scripts blocked" srcDoc={htmlPreview} className="gs-jarvis-html-preview"/>}
