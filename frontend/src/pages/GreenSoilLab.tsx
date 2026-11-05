@@ -83,8 +83,9 @@ function ChartView({ symbol, baseline, overlays }: { symbol: IndexSymbol; baseli
   }, [symbol, baseline, overlays])
   return <div ref={host} className="gs-price-chart h-[380px] w-full overflow-hidden rounded-md border" />
 }
-export default function GreenSoilLab() {
-  const [symbol, setSymbol] = useState<IndexSymbol>('NIFTY')
+export default function GreenSoilLab({ selectedSymbol }: { selectedSymbol?: IndexSymbol } = {}) {
+  const [symbol, setSymbol] = useState<IndexSymbol>(selectedSymbol ?? 'NIFTY')
+  useEffect(() => { if (selectedSymbol) setSymbol(selectedSymbol) }, [selectedSymbol])
   const [json, setJson] = useState('')
   const [baseline, setBaseline] = useState<Baseline | null>(null)
   const [error, setError] = useState('')
