@@ -67,8 +67,8 @@ def validate_revisions(document: object, *, expected_date: str, now: datetime) -
             raise ValueError("revision date mismatch")
         if last_at is not None and at < last_at:
             raise ValueError("revision timestamps must increase")
-        if not timedelta(0) <= now.astimezone(IST) - at <= timedelta(minutes=2):
-            raise ValueError("stale/future revision")
+        if not timedelta(0) <= now.astimezone(IST) - at:
+            raise ValueError("future revision")
         if candle_close.minute % 5 or candle_close.second or candle_close.microsecond:
             raise ValueError("not a completed 5-minute candle boundary")
         if not timedelta(0) <= at - candle_close <= timedelta(minutes=5):
@@ -92,6 +92,8 @@ def validate_revisions(document: object, *, expected_date: str, now: datetime) -
             "execution": "DISABLED", "certainty": "UNVERIFIED_SCENARIO",
         })
         last_version, last_at = version, at
+    if not timedelta(0) <= now.astimezone(IST) - last_at <= timedelta(minutes=2):
+        raise ValueError("latest revision is stale")
     return {
         "report_date": expected_date, "source": source, "status": "WATCH_ONLY",
         "baseline": "IMMUTABLE_0830", "revisions": clean,
