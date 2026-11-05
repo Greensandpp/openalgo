@@ -12,8 +12,8 @@ just because this source file exists.
 - `ALLOWED_ORIGIN`: exact website origin, e.g.
   `https://greensandpp.github.io`.
 - `GEMINI_MODEL`: eligible Gemini Developer API model ID, *verify first*.
-  Default `gemini-2.5-flash` is a tentative compatibility starting point,
-  not a guarantee of free-tier entitlement.
+  Default `gemini-3.8-flash` is documented with free-tier pricing, but
+  not a guarantee of this project's actual API availability or quota.
 - `PORT`: Railway-provided listener port.
 
 ## Security and scope
@@ -44,3 +44,19 @@ model, add optional Gemini Live voice gateway, source-grounded news and
 authorized read-only market feeds; then wire voice command routing and JARVIS
 mode transitions. Design imported themes as strict JSON, never execute
 uploaded HTML scripts.
+
+## Read-only API model check (not run yet)
+
+The staging-only script `check_models.py` uses the `GEMINI_API_KEY` environment
+variable to make **one** read-only Google API `listModels` request. It prints
+only model IDs and supported API methods; it never prints the key, prompts or
+full provider responses. This check must run inside an authorized private
+runtime, not from public GitHub Pages. It does not enable paid billing or test
+generative token spending. For a new project Google documents free-tier pricing
+for `gemini-3.8-flash` and `gemini-3.5-flash-lite`, but individual
+access and quotas must still be verified. `gemini-4-argon` is not assumed
+to be authorized solely from a Gemini app screenshot.
+
+No API connectivity claim should be made until this check and an authorized
+test prompt succeed. Do not connect public frontend to token-authenticated
+prototype.
