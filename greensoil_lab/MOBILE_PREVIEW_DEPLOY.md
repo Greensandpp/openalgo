@@ -46,3 +46,15 @@ demo. Production bot, Pine and Railway are out of scope.
 
 Compact collapsible detail panels, a dark chart preview and an explicit
 synthetic-data watermark improve phone readability. Live feeds remain absent.
+
+## V2 reactive core status
+
+- CSS plus 2D canvas glittering/reactive core replaces old hero orb in isolated static preview.
+- Touch interaction changes visual state; micro-animations are **simulated**, not a
+  connected AI process or proof of market-data analysis.
+- Type a question for a browser text-to-speech demo. Optional user-initiated
+  microphone uses the browser speech-recognition service where available.
+  It may send audio to that browser's speech service; no background mic capture.
+- Queries about targets and entry fail closed with NO TRADE because no trusted live
+  market feed or voice AI model is attached to GitHub Pages.
+- Reduced motion / tab suspension suspend canvas animation.
