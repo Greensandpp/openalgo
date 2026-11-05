@@ -31,6 +31,8 @@ jobs:
         run: python -m unittest discover -s test -p 'test_greensoil_lab_baseline_source.py' -v
       - name: Validate early warning fails closed on stale OI data
         run: python -m unittest discover -s test -p 'test_greensoil_lab_monitor_events.py' -v
+      - name: Check read-only index-watch feed endpoint
+        run: python -m unittest discover -s test -p 'test_greensoil_lab_watch_source.py' -v
       - name: Verify no broker credentials in CI
         run: |
           test -z "${BROKER_API_KEY:-}"
