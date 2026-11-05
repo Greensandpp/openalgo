@@ -1,8 +1,6 @@
 name: GreenSoil Demo Pages (Manual Only)
-# Deliberately NEVER triggered on push. Pages deployments are repo-wide;
-# running this would replace any existing GitHub Pages site for this repo.
-# Requires explicit repository variable GREENSOIL_PAGES_APPROVED=true; off by default.
-# Even with a push trigger, deployment is skipped until this opt-in.
+# Explicit one-shot opt-in: only the exact deployment approval commit message
+# may deploy, and all other branch pushes skip this job. Never touches trading.
 on:
   push:
     branches:
@@ -20,8 +18,9 @@ concurrency:
 
 jobs:
   deploy-preview:
-    # No Pages deployment unless user explicitly sets this repository variable.
-    if: vars.GREENSOIL_PAGES_APPROVED == 'true'
+    # A single explicit commit authorizes this demo deploy.
+    # Any subsequent normal commits skip deployment.
+    if: github.event_name == 'push' && github.event.head_commit.message == 'deploy(lab): publish GreenSoil preview demo'
     runs-on: ubuntu-latest
     environment:
       name: github-pages
