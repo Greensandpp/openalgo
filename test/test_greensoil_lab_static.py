@@ -56,6 +56,34 @@ class TestGuardPlacement(unittest.TestCase):
                     self.assertIn(call.func.id, ("denied_broker_write", "raise_broker_write_blocked"))
                     self.assertIn(call.func.id, [n.name for n in body[0].names])
 
+    def test_flow_order_nodes_are_unconditionally_denied(self):
+        path = ROOT / "services/flow_executor_service.py"
+        tree = ast.parse(path.read_text(encoding="utf-8"))
+        names = {
+            "execute_place_order", "execute_smart_order",
+            "execute_options_order", "execute_options_multi_order",
+            "execute_modify_order", "execute_cancel_order",
+            "execute_cancel_all_orders", "execute_close_positions",
+            "execute_basket_order", "execute_split_order",
+        }
+        methods = {
+            node.name: node
+            for cls in tree.body if isinstance(cls, ast.ClassDef)
+            for node in cls.body if isinstance(node, ast.FunctionDef)
+        }
+        for name in names:
+            with self.subTest(name=name):
+                self.assertIn(name, methods)
+                body = methods[name].body
+                self.assertGreaterEqual(len(body), 2)
+                self.assertIsInstance(body[0], ast.ImportFrom)
+                self.assertEqual(body[0].module, "greensoil_lab.read_only")
+                self.assertIsInstance(body[1], ast.Expr)
+                call = body[1].value
+                self.assertIsInstance(call, ast.Call)
+                self.assertIsInstance(call.func, ast.Name)
+                self.assertEqual(call.func.id, "raise_broker_write_blocked")
+
     def test_pending_approval_denied(self):
         path = ROOT / "services/pending_order_execution_service.py"
         tree = ast.parse(path.read_text(encoding="utf-8"))
