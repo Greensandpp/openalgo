@@ -6,7 +6,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 
 export type CoreMode = 'idle' | 'listening' | 'thinking' | 'speaking'
 type Dot = { phase: number; orbit: number; radius: number; speed: number; size: number; layer: number }
-const DOT_COUNT = 145
+const DOT_COUNT = 220
 const DOTS: Dot[] = Array.from({ length: DOT_COUNT }, (_, i) => ({
   phase: i * 2.3999632, orbit: 20 + (i * 47.7) % 114,
   radius: 0.28 + ((i * 19) % 70) / 100,
@@ -66,6 +66,53 @@ export function ReactiveCore({ mode, reducedMotion, onTouch }: {
         context.shadowColor = dot.layer === 2 ? '#8e68fd' : '#24dfff'
         context.fill()
       }
+      // Holographic architecture rings: segmented arcs + sweeping telemetry.
+      context.save()
+      context.translate(center, center)
+      context.globalCompositeOperation = 'screen'
+      const velocity = intent === 'thinking' ? 2.1 : intent === 'speaking' ? 1.55 : 1
+      for (let orbit = 0; orbit < 4; orbit++) {
+        const radius = 52 + orbit * 17
+        const rotation = t * (.17 + orbit * .07) * velocity * (orbit % 2 ? -1 : 1)
+        const segments = orbit === 0 ? 22 : 32
+        for (let arc = 0; arc < segments; arc++) {
+          if ((arc + orbit) % 6 === 0) continue
+          const start = rotation + arc * (Math.PI * 2 / segments)
+          context.beginPath()
+          context.arc(0, 0, radius, start, start + Math.PI * 1.45 / segments)
+          context.strokeStyle = orbit % 2
+            ? `rgba(255,185,123,${.20 + .26 * Math.sin(t + arc * .45) ** 2})`
+            : `rgba(250,143,214,${.21 + .33 * Math.cos(t + arc * .5) ** 2})`
+          context.lineWidth = orbit === 0 ? 1.6 : .8
+          context.stroke()
+        }
+      }
+      for (let beam = 0; beam < 8; beam++) {
+        const angle = beam * Math.PI / 4 + t * .08
+        const pulse = .16 + .2 * Math.abs(Math.sin(t * 1.25 + beam))
+        context.beginPath()
+        context.moveTo(Math.cos(angle) * 18, Math.sin(angle) * 18)
+        context.lineTo(Math.cos(angle) * 102, Math.sin(angle) * 102)
+        context.strokeStyle = `rgba(255,177,223,${pulse})`
+        context.lineWidth = .55
+        context.stroke()
+      }
+      // Hot center; used only as an abstract light source, not a fake market status.
+      const spark = 2.6 + Math.sin(t * (intent === 'speaking' ? 13 : 2.8)) * 1.1
+      const energy = context.createRadialGradient(0, 0, 0, 0, 0, 42)
+      energy.addColorStop(0, 'rgba(255,250,232,.95)')
+      energy.addColorStop(.12, 'rgba(255,183,226,.87)')
+      energy.addColorStop(.35, 'rgba(235,109,183,.39)')
+      energy.addColorStop(1, 'rgba(231,97,169,0)')
+      context.fillStyle = energy
+      context.beginPath()
+      context.arc(0, 0, 42, 0, Math.PI * 2)
+      context.fill()
+      context.beginPath()
+      context.arc(0, 0, spark, 0, Math.PI * 2)
+      context.fillStyle = '#fff6e9'
+      context.fill()
+      context.restore()
       context.shadowBlur = 0
       frame = requestAnimationFrame(drawing)
     }
@@ -115,6 +162,8 @@ export function ReactiveCore({ mode, reducedMotion, onTouch }: {
           <div className="gs-reactor-mesh" />
           <div className="gs-reactor-eye" />
         </div>
+        <div className="gs-reactor-trace gs-reactor-trace-a" aria-hidden="true" />
+        <div className="gs-reactor-trace gs-reactor-trace-b" aria-hidden="true" />
         <div className="gs-reactor-flash" aria-hidden="true" />
       </button>
       <div className="gs-reactor-status" role="status" aria-live="polite">
