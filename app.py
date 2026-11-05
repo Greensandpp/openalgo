@@ -187,6 +187,9 @@ def create_app():
     from greensoil_lab.watch_source import bp as greensoil_watch_bp
     app.register_blueprint(greensoil_watch_bp)
 
+    from greensoil_lab.revision_source import bp as greensoil_revisions_bp
+    app.register_blueprint(greensoil_revisions_bp)
+
     # Initialize SocketIO
     socketio.init_app(app)  # Link SocketIO to the Flask app
 
