@@ -56,10 +56,14 @@ export default function GreenSoilMarketPreview() {
     window.speechSynthesis.speak(utterance)
   }
   const touch = () => {
+    // Touch is visual-only: never claim the microphone is active.
+    // Actual listening state belongs exclusively to the user-pressed mic.
     if ('speechSynthesis' in window) window.speechSynthesis.cancel()
+    recognizer.current?.stop()
+    recognizer.current = null
     activeSpeech.current = false
-    setMode('listening')
-    setAnswer('Core activated. This is a visual listening simulation. Type a question below for the demo voice response.')
+    setMode('idle')
+    setAnswer('Visual energy pulse activated. Microphone is OFF. Tap Use mic to listen or type a question below.')
   }
   const startMic = () => {
     const voiceWindow = window as SpeechWindow
