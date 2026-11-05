@@ -376,3 +376,29 @@
  .gs-voice-note{margin:8px 0}
  .gs-section-heading{margin-top:20px}
 }
+
+
+/* Plasma Core V5: incandescent orange-gold magnetic confinement field.
+   The rings and particles are live rendered, not a flat GIF or opaque cartoon sphere. */
+.gs-reactor-sphere{
+ width:105px;height:105px;filter:none!important;
+ background:
+ radial-gradient(circle at 49% 50%,#ffffe6 0%,#ffec9f 4%,#ffc452 10%,#ff7218 19%,#a02e09 35%,#2b0d08 57%,#070505 75%);
+ border:1px solid #ffbc618c;
+ box-shadow:inset 0 0 23px #f7a3409c,0 0 22px #ff9e3acc,0 0 55px #ef611687,0 0 108px #c73d143d;
+}
+.gs-reactor-sphere:after{border-color:#ffcb6788;box-shadow:inset 0 0 19px #ffb43177,0 0 18px #fa6e1466}
+.gs-reactor-eye{background:#fff0b3;filter:blur(14px)}
+.gs-reactor-mesh{background:repeating-conic-gradient(from 6deg,#ffbf613b 0deg 1deg,transparent 2deg 13deg)}
+.gs-reactor-halo{background:radial-gradient(circle,#ffc57016 0%,#e65b2624 23%,#a82a1019 45%,transparent 73%);
+box-shadow:0 0 84px #ff631b28}
+.gs-reactor-orbit-a{border-color:#ffad51b9;box-shadow:0 0 22px #ff862a80}
+.gs-reactor-orbit-b{border-color:#ff6e23a6;box-shadow:0 0 19px #fa4c1d7a}
+.gs-reactor-orbit-c{border-color:#ffda7b9b}
+.gs-reactor-trace-a{border-top-color:#ffe6a1;border-right-color:#ff6d1e;box-shadow:0 -4px 24px #fa771b8a}
+.gs-reactor-trace-b{border-color:#ffb845a4;box-shadow:0 0 23px #fd6a2180}
+.gs-reactor-touch{filter:drop-shadow(0 0 22px #ff681b54)}
+.gs-reactor-live{background:#ffc65a;box-shadow:0 0 10px #ffb83f}
+.gs-reactor-thinking .gs-reactor-orbit-b,.gs-reactor-processing .gs-reactor-orbit-b{animation-duration:4s}
+.gs-reactor-processing .gs-reactor-halo{animation-duration:.75s}
+.gs-reactor-completed .gs-reactor-halo{animation-duration:1.8s;filter:brightness(1.5)}
