@@ -290,3 +290,89 @@
  .gs-command-copy{padding-top:25px}
  .gs-voice-demo{margin-top:12px}
 }
+
+
+/* V4 cinematic reactor redesign, following reference direction without copying.
+   A ring-and-particle instrument rather than the old shaded pink ball. */
+.gs-reactor-touch{filter:drop-shadow(0 0 22px #da7da742);perspective:720px}
+.gs-reactor-sphere{
+ width:124px;height:124px;
+ background:radial-gradient(circle at 50% 50%,#fff3f2 0%,#ffb9da 5%,#b4548b 12%,#371a37 35%,#100c1d 65%,#090811 100%);
+ border:1px solid #eab0d865;
+ box-shadow:inset 0 0 24px #e89acb44,0 0 24px #e58abd88,0 0 60px #c964a75c,0 0 100px #e6a45a1f;
+ animation:gs-reactor-levitate 4.4s ease-in-out infinite;
+ filter:none!important;
+}
+.gs-reactor-sphere:after{
+ content:"";position:absolute;inset:12px;border-radius:50%;border:1px dashed #f8b9d17d;
+ box-shadow:inset 0 0 18px #efb2d052,0 0 14px #d58abe55;
+}
+.gs-reactor-mesh{
+ inset:0;
+ background:repeating-conic-gradient(from 6deg,#f4a9da38 0deg 1.6deg,transparent 2deg 10deg);
+ opacity:.65;
+}
+.gs-reactor-eye{left:39%;top:39%;width:25px;height:25px;filter:blur(12px);background:#ffe6ec;opacity:.85}
+.gs-reactor-halo{
+ inset:8px;
+ background:radial-gradient(circle,#f5c5c50a 0%,#dc64b222 20%,#b64a9723 35%,transparent 71%);
+ box-shadow:0 0 68px #c74b941b;
+ animation:gs-reactor-breathe 5.4s ease-in-out infinite;
+}
+.gs-reactor-orbit{
+ border:1px solid #e6a7c189;box-shadow:0 0 14px #ef8acb4f,inset 0 0 12px #eeb1cc19;
+}
+.gs-reactor-orbit-a{width:270px;height:270px;margin:-135px;border-color:#f0ae9a9c}
+.gs-reactor-orbit-b{border-color:#d88bda9e}
+.gs-reactor-orbit-c{border-color:#fbc27a84;opacity:.9}
+.gs-particle-canvas{filter:none!important;z-index:6}
+.gs-reactor-trace{position:absolute;top:50%;left:50%;z-index:5;width:280px;height:280px;margin:-140px;border-radius:50%;pointer-events:none}
+.gs-reactor-trace-a{
+ border:2px solid transparent;
+ border-top-color:#ffcf9d;
+ border-right-color:#f294c5;
+ box-shadow:0 -5px 22px #f5a9a763;
+ transform:rotateX(72deg) rotateZ(-15deg);
+ animation:gs-trace-a 6.5s linear infinite;
+}
+.gs-reactor-trace-b{
+ width:232px;height:232px;margin:-116px;
+ border:1px dashed #f4b1e19a;
+ box-shadow:0 0 18px #b959c16b;
+ transform:rotateY(65deg) rotateZ(25deg);
+ animation:gs-trace-b 9s linear infinite reverse;
+}
+.gs-reactor-thinking .gs-reactor-trace-a,
+.gs-reactor-speaking .gs-reactor-trace-a{animation-duration:2.4s}
+.gs-reactor-listening .gs-reactor-trace-b{animation-duration:4.2s}
+.gs-reactor-touch:active .gs-reactor-halo{filter:brightness(1.8)}
+.gs-reactor-touch:active .gs-reactor-sphere{box-shadow:0 0 36px #fff0d8c7,0 0 105px #fa89d0ba}
+.gs-reactor-status{letter-spacing:.19em}
+@keyframes gs-reactor-levitate{
+ 0%,100%{transform:translate(-50%,-50%) scale(1)}
+ 50%{transform:translate(-50%,-50%) scale(1.055)}
+}
+@keyframes gs-trace-a{to{transform:rotateX(72deg) rotateZ(345deg)}}
+@keyframes gs-trace-b{to{transform:rotateY(65deg) rotateZ(385deg)}}
+.gs-motion-off .gs-reactor-trace,
+.gs-motion-off .gs-reactor-sphere{animation:none!important}
+@media(prefers-reduced-motion:reduce){
+ .gs-reactor-trace,.gs-reactor-sphere{animation:none!important}
+}
+/* Reduce top-fold marketing so voice and charts are reachable on a phone. */
+@media(max-width:720px){
+ .gs-command-copy{padding:15px 0 0}
+ .gs-eyebrow{font-size:9px;letter-spacing:.12em}
+ .gs-command h1{font-size:clamp(26px,8vw,36px);margin:12px 0 10px}
+ .gs-command-copy>p{font-size:12px;line-height:1.5}
+ .gs-command-tags{margin-top:12px;gap:5px}
+ .gs-command-tags span{font-size:8px;padding:7px}
+ .gs-warning{margin-top:12px;font-size:9px}
+ .gs-command-visual{min-height:298px}
+ .gs-reactor{height:292px;min-height:292px}
+ .gs-reactor-touch{top:0;transform:translateX(-50%) scale(.74)}
+ .gs-reactor-status{bottom:0}
+ .gs-voice-demo{padding:13px}
+ .gs-voice-note{margin:8px 0}
+ .gs-section-heading{margin-top:20px}
+}
