@@ -204,7 +204,7 @@ ACTIVE_TOOLSETS = frozenset(
 # send anything outward, whatever toolset it belongs to. This is the
 # env-level kill switch for order placement: unlike the OAuth scopes it
 # also covers the stdio transport, where there is no token to scope.
-READ_ONLY = _env_flag("OPENALGO_MCP_READ_ONLY")
+# GreenSoil isolated lab: never register mutating MCP tools regardless of env.\nREAD_ONLY = True
 
 
 class ToolMeta:
