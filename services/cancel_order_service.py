@@ -80,6 +80,10 @@ def cancel_order_with_auth(
         - Response data (dict)
         - HTTP status code (int)
     """
+    # GreenSoil lab: deny this internal broker mutation unconditionally.
+    from greensoil_lab.read_only import denied_broker_write
+    return denied_broker_write("cancel_order_with_auth")
+
     order_request_data = copy.deepcopy(original_data)
     if "apikey" in order_request_data:
         order_request_data.pop("apikey", None)
