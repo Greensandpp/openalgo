@@ -144,6 +144,10 @@ def place_order_with_auth(
         - Response data (dict)
         - HTTP status code (int)
     """
+    # GreenSoil lab: deny direct internal broker execution, including force_live.
+    from greensoil_lab.read_only import denied_broker_write
+    return denied_broker_write("place_order_with_auth")
+
     order_request_data = copy.deepcopy(original_data)
     if "apikey" in order_request_data:
         order_request_data.pop("apikey", None)
