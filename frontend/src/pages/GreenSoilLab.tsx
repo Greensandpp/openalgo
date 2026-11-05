@@ -74,16 +74,59 @@ export default function GreenSoilLab() {
   const [json, setJson] = useState('')
   const [baseline, setBaseline] = useState<Baseline | null>(null)
   const [error, setError] = useState('')
+  const [sourceMode, setSourceMode] = useState<'auto' | 'manual'>('auto')
+  const [feedStatus, setFeedStatus] = useState('Checking today’s local baseline…')
+  useEffect(() => {
+    if (sourceMode !== 'auto') return
+    let disposed = false
+    let controller: AbortController | null = null
+    const refresh = async () => {
+      controller?.abort()
+      controller = new AbortController()
+      try {
+        const response = await fetch('/greensoil/api/baseline', {
+          method: 'GET', credentials: 'same-origin', cache: 'no-store',
+          signal: controller.signal,
+        })
+        if (disposed) return
+        if (response.status === 404) {
+          setBaseline(null)
+          setFeedStatus('Today’s 8:30 report not delivered to local source — demo only')
+          return
+        }
+        if (!response.ok) {
+          setBaseline(null)
+          setFeedStatus('Today’s baseline unavailable or invalid — demo only')
+          return
+        }
+        const raw: unknown = await response.json()
+        if (disposed) return
+        const parsed = parseBaseline(raw, istToday())
+        setBaseline(parsed)
+        setError('')
+        setFeedStatus('Automatic local baseline loaded')
+      } catch (err) {
+        if (disposed || (err instanceof DOMException && err.name === 'AbortError')) return
+        setBaseline(null)
+        setFeedStatus('Automatic source unavailable — demo only')
+      }
+    }
+    void refresh()
+    const interval = window.setInterval(() => void refresh(), 60_000)
+    return () => { disposed = true; controller?.abort(); window.clearInterval(interval) }
+  }, [sourceMode])
   const active = baseline?.instruments[symbol] ?? synthetic(symbol)
   function load() {
     try {
       const parsed: unknown = JSON.parse(json)
       const result = parseBaseline(parsed, istToday())
+      setSourceMode('manual')
       setBaseline(result)
       setError('')
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Invalid JSON')
       // Reject stale input rather than continue showing a previous baseline.
+      setSourceMode('manual')
       setBaseline(null)
     }
   }
@@ -94,6 +137,7 @@ export default function GreenSoilLab() {
         <p className="text-sm text-muted-foreground">
           OFFLINE TEST · SYNTHETIC CANDLES ONLY · NO BROKER · NO ORDERS
         </p>
+        <p className="text-xs text-muted-foreground">{sourceMode === 'auto' ? feedStatus : 'Manual input mode'}</p>
         <p role="status" className="text-sm font-medium">
           {baseline ? `Validated ${baseline.reportDate} 08:30 levels from ${baseline.source}; candles are synthetic`
             : 'DEMO MODE: all candles and levels are synthetic'}
@@ -106,7 +150,7 @@ export default function GreenSoilLab() {
           placeholder='{"timezone":"Asia/Kolkata","report_date":"YYYY-MM-DD",...}' />
         <div className="mt-2 flex flex-wrap gap-2">
           <button type="button" className="rounded bg-primary px-3 py-2 text-primary-foreground" onClick={load}>Validate and show report levels</button>
-          <button type="button" className="rounded border px-3 py-2" onClick={() => {setBaseline(null);setJson('');setError('')}}>Reset to demo</button>
+          <button type="button" className="rounded border px-3 py-2" onClick={() => {setSourceMode('auto');setBaseline(null);setJson('');setError('')}}>Resume automatic feed</button>
         </div>
         {error && <p role="alert" className="mt-2 text-sm text-red-600">Rejected: {error}</p>}
       </section>
