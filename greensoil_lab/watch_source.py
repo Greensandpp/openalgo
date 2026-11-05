@@ -14,6 +14,7 @@ from zoneinfo import ZoneInfo
 from flask import Blueprint, jsonify
 
 from greensoil_lab.monitor_events import evaluate_watch
+from greensoil_lab.market_adapter import adapt_verified_feed
 
 bp = Blueprint("greensoil_watch", __name__)
 IST = ZoneInfo("Asia/Kolkata")
@@ -38,6 +39,10 @@ def local_watch(now: datetime, *, root: str | None = None) -> dict:
     source = document.get("source")
     if not isinstance(source, str) or not source.strip() or len(source) > 160:
         raise ValueError("attributed source required")
+    # Preferred structured collector contract: independently timestamped full
+    # index-weight constituents and option OI; never infer missing evidence.
+    if "indexes" in document:
+        return adapt_verified_feed(document, now=now)
     snapshots = document.get("snapshots")
     if not isinstance(snapshots, list) or len(snapshots) != 2:
         raise ValueError("one snapshot per index required")
