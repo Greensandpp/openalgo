@@ -128,8 +128,8 @@ export default function GreenSoilMarketPreview() {
         </header>
         <section className="gs-command" aria-label="AI intelligence dashboard introduction">
           <div className="gs-command-copy">
-            <div className="gs-eyebrow"><span className="gs-eyebrow-line" /> FUTURE-READY MARKET WORKSPACE / V2 REACTIVE CORE</div>
-            <h1>Observe the market.<br /><em>Decode the signal.</em></h1>
+            <div className="gs-eyebrow"><span className="gs-eyebrow-line" /> GREENSoil / OBSIDIAN INTELLIGENCE · V3</div>
+            <h1>See beyond price.<br /><em>Read the momentum.</em></h1>
             <p>NIFTY &amp; SENSEX scenario maps, OI pressure, and evolving market structure—one intelligent cockpit.</p>
             <div className="gs-command-tags">
               <span>◉ NIFTY + SENSEX</span>
