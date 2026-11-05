@@ -30,3 +30,12 @@ def denied_broker_write(operation: str):
         "code": "GREENSOIL_LAB_READ_ONLY",
         "message": f"GreenSoil lab forbids broker mutation: {operation}",
     }, 403
+
+
+class LabBrokerWriteBlocked(RuntimeError):
+    """Raised when a lab-only codepath attempts broker mutation."""
+
+
+def raise_broker_write_blocked(operation: str):
+    """Fail closed for internal strategy/background/order helpers."""
+    raise LabBrokerWriteBlocked(f"GREENSOIL_LAB_READ_ONLY: {operation}")
