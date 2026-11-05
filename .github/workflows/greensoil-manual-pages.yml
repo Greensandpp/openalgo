@@ -1,0 +1,51 @@
+name: GreenSoil Demo Pages (Manual Only)
+# Deliberately NEVER triggered on push. Pages deployments are repo-wide;
+# running this would replace any existing GitHub Pages site for this repo.
+# Only dispatch after verifying the repository does not host a needed site.
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: greensoil-manual-pages
+  cancel-in-progress: false
+
+jobs:
+  deploy-preview:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: greens-oil/paper-lab
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - name: Install locked packages, no package scripts
+        run: npm ci --ignore-scripts --no-audit --no-fund
+      - name: Validate TypeScript
+        run: npx tsc -b --pretty false
+      - name: Produce standalone synthetic-only chart preview
+        run: |
+          npx vite build --config vite.greensoil-preview.config.ts
+          cp dist-greensoil-preview/greensoil-preview.html dist-greensoil-preview/index.html
+          test -s dist-greensoil-preview/index.html
+          test -d dist-greensoil-preview/assets
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: frontend/dist-greensoil-preview
+      - id: deployment
+        uses: actions/deploy-pages@v4
