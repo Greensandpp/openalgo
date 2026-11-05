@@ -194,3 +194,99 @@
   .gs-reactor-status{bottom:0;font-size:10px}
   .gs-reactor-status span:last-child{font-size:9px}
 }
+
+
+/* V3 OBSIDIAN / AURORA — deliberate departure from the old blue dashboard.
+ * Semantic chart price series (CE/PE/support) stay unchanged.
+ */
+.gs-market-shell{
+ --gs-cyan:#e9b96f;--gs-violet:#d3a3ff;--gs-muted:#b3a9ba;
+ background:
+   radial-gradient(ellipse at 73% 5%,rgba(121,57,91,.22),transparent 40%),
+   radial-gradient(ellipse at 9% 37%,rgba(112,48,91,.13),transparent 40%),
+   radial-gradient(ellipse at 64% 76%,rgba(106,76,31,.10),transparent 35%),
+   linear-gradient(158deg,#09090c 0%,#141017 49%,#09080c 100%);
+ color:#f6f1ee;
+}
+.gs-market-shell .gs-ambient-a{background:#904b76;opacity:.22}
+.gs-market-shell .gs-ambient-b{background:#c18948;opacity:.14}
+.gs-topbar{border-bottom-color:#f0bd8c28}
+.gs-mark-symbol{
+ background:linear-gradient(145deg,#2a1821,#131115);color:#f8d69d;
+ border:1px solid #f2b66e69;box-shadow:inset 0 1px #ffffff13,0 0 28px #f1b46b1e
+}
+.gs-mark strong span,.gs-footer>span>span{color:#f1c28b}
+.gs-mark small,.gs-section-heading small{color:#a99ba9}
+.gs-paper-chip{background:#60432a2a;border-color:#deae734d;color:#f9dab2}
+.gs-paper-chip i{background:#f4bd70;box-shadow:0 0 11px #f4ad6b}
+.gs-motion-control,.gs-voice-stop{
+ background:linear-gradient(155deg,#2a2028,#17131b);border-color:#a8919c64;color:#e8dce2
+}
+.gs-eyebrow,.gs-voice-eyebrow{color:#d2a4bd}
+.gs-eyebrow-line{background:#e9bc8a;box-shadow:0 0 16px #e9bc8a}
+.gs-command h1{font-weight:800;letter-spacing:-.052em}
+.gs-command h1 em{
+ background:linear-gradient(108deg,#ffe1a3 0%,#e5a1b4 48%,#b39aff 100%);
+ background-clip:text;-webkit-background-clip:text
+}
+.gs-command-copy>p{color:#c4b5be}
+.gs-command-tags span{
+ background:linear-gradient(145deg,#38262e7e,#1b151c75);
+ border-color:#e0a98c38;color:#e5cbd2
+}
+.gs-warning{color:#ffdcaa;background:#9f68221c;border-color:#e5ae6253}
+.gs-section-heading h2{color:#f8f0e8}
+.gs-chart-workspace{
+ background:linear-gradient(155deg,#201820ee,#100e13f5);
+ border-color:#d6a47635;box-shadow:0 24px 85px #0008,0 0 75px #a7616c0c
+}
+.gs-chart-workspace section,.gs-chart-workspace main>div.rounded-md.border,
+.gs-chart-workspace main>div.grid>div,.gs-chart-workspace main>div.rounded.border{
+ background:#241b25d9;border-color:#ae899947
+}
+.gs-chart-workspace main p,.gs-chart-workspace main .text-muted-foreground{color:#c5b7c0}
+.gs-chart-workspace main h1,.gs-chart-workspace main h2,.gs-chart-workspace main strong{color:#f8edf1}
+.gs-chart-workspace .gs-feed-settings,
+.gs-chart-workspace .gs-monitor-details,.gs-chart-workspace .gs-level-details{
+ background:#251b24;border-color:#9d78874f;color:#f4e4e9
+}
+.gs-chart-workspace details summary::before{color:#e9b96f}
+.gs-chart-workspace details summary span{color:#c19ead}
+.gs-level-tile,.gs-zone-tile{background:#19131b;border-color:#9a758b52}
+.gs-level-name,.gs-zone-tile span{color:#b8a4b0}
+.gs-level-price{color:#fff5ea}
+.gs-chart-workspace textarea,.gs-chart-workspace input{background:#120d15;border-color:#996b8e;color:#f6eafa}
+.gs-chart-workspace .bg-primary{background:linear-gradient(110deg,#f1ca86,#eab3a1);color:#24151b}
+.gs-chart-workspace main>div[role=group] button[aria-pressed=true]{
+ border-color:#edb47c;background:#53342d;color:#fff1db;box-shadow:0 0 15px #eaab692d
+}
+.gs-price-chart{border-color:#a27c9852!important}
+.gs-voice-demo{
+ background:linear-gradient(135deg,#291d28ed,#161119f0);
+ border-color:#ca8ea54a;box-shadow:0 20px 60px #0006
+}
+.gs-voice-heading h2 small{color:#e5b28b}
+.gs-voice-note,.gs-voice-disclaimer{color:#c2adb9}
+.gs-voice-form input{background:#120e16;color:#fff3f4;border-color:#a3798b}
+.gs-voice-form button{background:linear-gradient(100deg,#ffcf88,#e8a5b9);color:#25131c}
+.gs-voice-form .gs-voice-mic{background:#362431;border-color:#b4809c;color:#f9dfec}
+.gs-voice-reply{background:#251724;border-left-color:#f4b476;color:#f9e6eb}
+.gs-voice-form input:focus-visible,.gs-voice-form button:focus-visible,
+.gs-chart-workspace button:focus-visible,.gs-motion-control:focus-visible{
+ outline:2px solid #edc19b;outline-offset:3px
+}
+.gs-reactor-touch{filter:drop-shadow(0 0 18px #de7b9940)}
+.gs-reactor-sphere,.gs-particle-canvas{filter:hue-rotate(120deg) saturate(.76)}
+.gs-reactor-halo{background:radial-gradient(circle,#f1a9bd31 0%,#c36d9c11 42%,transparent 75%);
+ box-shadow:0 0 78px #c46a9528}
+.gs-reactor-orbit-a{border-color:#eabb957c;box-shadow:0 0 22px #e7ad7360}
+.gs-reactor-orbit-b{border-color:#dd9dca92;box-shadow:0 0 19px #c67cca5c}
+.gs-reactor-orbit-c{border-color:#f2cfab6d}
+.gs-reactor-live{background:#e7b87c;box-shadow:0 0 10px #e7b87c}
+.gs-reactor-status{color:#f0dbd7}
+.gs-reactor-status span:last-child{color:#ae92a0}
+.gs-footer{border-top-color:#f3c5a229;color:#aa95a2}
+@media(max-width:720px){
+ .gs-command-copy{padding-top:25px}
+ .gs-voice-demo{margin-top:12px}
+}
