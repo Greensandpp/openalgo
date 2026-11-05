@@ -147,6 +147,10 @@ def place_single_split_order_for_leg(
     broker: str | None = None,
     prefetched_quote: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
+    # GreenSoil isolated lab: disallow any broker/order mutation, including internal jobs.
+    from greensoil_lab.read_only import raise_broker_write_blocked
+    raise_broker_write_blocked("place_single_split_order_for_leg")
+
     """
     Place a single split order for a leg and return result.
 
@@ -341,6 +345,10 @@ def resolve_and_place_leg(
     underlying_ltp: float | None = None,
     leg_quote_cache: dict[tuple[str, str], dict[str, Any]] | None = None,
 ) -> dict[str, Any]:
+    # GreenSoil isolated lab: disallow any broker/order mutation, including internal jobs.
+    from greensoil_lab.read_only import raise_broker_write_blocked
+    raise_broker_write_blocked("resolve_and_place_leg")
+
     """
     Resolve option symbol and place order for a single leg.
     Supports split orders if splitsize is specified in leg_data.
@@ -575,6 +583,10 @@ def process_multiorder_with_auth(
     api_key: str,
     original_data: dict[str, Any],
 ) -> tuple[bool, dict[str, Any], int]:
+    # GreenSoil isolated lab: disallow any broker/order mutation, including internal jobs.
+    from greensoil_lab.read_only import raise_broker_write_blocked
+    raise_broker_write_blocked("process_multiorder_with_auth")
+
     """
     Process options multi-order with provided authentication.
     BUY legs execute first, then SELL legs.
@@ -723,6 +735,10 @@ def place_options_multiorder(
     auth_token: str | None = None,
     broker: str | None = None,
 ) -> tuple[bool, dict[str, Any], int]:
+    # GreenSoil isolated lab: disallow any broker/order mutation, including internal jobs.
+    from greensoil_lab.read_only import raise_broker_write_blocked
+    raise_broker_write_blocked("place_options_multiorder")
+
     """
     Place multiple option legs with common underlying.
     BUY legs are executed first for margin efficiency.
