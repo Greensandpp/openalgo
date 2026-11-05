@@ -84,6 +84,36 @@ class TestGuardPlacement(unittest.TestCase):
                 self.assertIsInstance(call.func, ast.Name)
                 self.assertEqual(call.func.id, "raise_broker_write_blocked")
 
+    def test_mcp_tools_force_read_only(self):
+        path = ROOT / "mcp/mcpserver.py"
+        tree = ast.parse(path.read_text(encoding="utf-8"))
+        assignments = [
+            node for node in tree.body
+            if isinstance(node, ast.Assign)
+            and any(isinstance(t, ast.Name) and t.id == "READ_ONLY" for t in node.targets)
+        ]
+        self.assertEqual(len(assignments), 1)
+        self.assertIsInstance(assignments[0].value, ast.Constant)
+        self.assertIs(assignments[0].value.value, True)
+
+    def test_agent_order_pipeline_returns_before_dispatch(self):
+        path = ROOT / "services/agent/tools/orders.py"
+        tree = ast.parse(path.read_text(encoding="utf-8"))
+        method = next(
+            fn
+            for cls in tree.body if isinstance(cls, ast.ClassDef)
+            for fn in cls.body if isinstance(fn, ast.FunctionDef)
+            if fn.name == "_run_mutation"
+        )
+        body = method.body
+        if (body and isinstance(body[0], ast.Expr)
+                and isinstance(body[0].value, ast.Constant)
+                and isinstance(body[0].value.value, str)):
+            body = body[1:]
+        self.assertIsInstance(body[0], ast.Return)
+        self.assertIn("GREENSOIL_LAB_READ_ONLY", ast.unparse(body[0]))
+        self.assertNotIn("plan_factory", ast.unparse(body[0]))
+
     def test_pending_approval_denied(self):
         path = ROOT / "services/pending_order_execution_service.py"
         tree = ast.parse(path.read_text(encoding="utf-8"))
