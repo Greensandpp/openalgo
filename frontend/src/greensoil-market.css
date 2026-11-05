@@ -402,3 +402,114 @@ box-shadow:0 0 84px #ff631b28}
 .gs-reactor-thinking .gs-reactor-orbit-b,.gs-reactor-processing .gs-reactor-orbit-b{animation-duration:4s}
 .gs-reactor-processing .gs-reactor-halo{animation-duration:.75s}
 .gs-reactor-completed .gs-reactor-halo{animation-duration:1.8s;filter:brightness(1.5)}
+
+
+/* GreenSoil Intelligent V6 — full-screen JARVIS-first mobile terminal.
+ * One thin bottom command bar; PAPER charts appear only after user command.
+ * Green/black surface with gold-orange plasma lighting and accessible controls.
+ */
+.gs-jarvis-shell{
+ --gs-user-green:#00ff66;--gs-user-gold:#ffd700;--gs-user-dark:#050b07;
+ min-height:100dvh;position:relative;color:#ecfff2;
+ background:
+ radial-gradient(ellipse at 50% 45%,color-mix(in srgb,var(--gs-user-green) 9%,transparent) 0%,transparent 52%),
+ radial-gradient(ellipse at 88% 76%,#96702513,transparent 45%),
+ linear-gradient(160deg,#020504,var(--gs-user-dark) 62%,#030804);
+ font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;
+ padding-bottom:calc(96px + env(safe-area-inset-bottom,0px));
+ overflow-x:hidden;
+}
+.gs-jarvis-shell *{box-sizing:border-box}
+.gs-jarvis-header{display:flex;align-items:center;justify-content:space-between;gap:8px;
+ padding:14px clamp(13px,4vw,32px);position:relative;z-index:4;
+ background:#050a08a1;border-bottom:1px solid #5edc8b29;backdrop-filter:blur(12px)}
+.gs-jarvis-brand{display:flex;align-items:center;gap:12px;min-width:0}
+.gs-jarvis-diamond{color:var(--gs-user-green);font-size:27px;text-shadow:0 0 16px var(--gs-user-green)}
+.gs-jarvis-brand strong{display:block;color:#f0fff4;font-size:clamp(15px,3.8vw,24px);
+ font-weight:780;line-height:1.18;white-space:nowrap;letter-spacing:-.035em}
+.gs-jarvis-brand strong em{font-style:normal;color:var(--gs-user-green)}
+.gs-jarvis-brand small{display:block;margin-top:2px;color:#9db5a4;font-size:8px;letter-spacing:.14em}
+.gs-jarvis-settings{flex:none;border:1px solid #71c89963;border-radius:11px;color:#c6ffda;
+ background:#09201777;padding:7px 12px;min-width:43px;min-height:40px;font-size:23px}
+.gs-jarvis-main{width:min(1060px,100%);margin:auto;padding:0 clamp(9px,2vw,28px)}
+.gs-jarvis-hero{min-height:calc(100dvh - 177px);display:flex;align-items:center;justify-content:center;
+ flex-direction:column;position:relative;padding:20px 8px 16px;gap:8px}
+.gs-jarvis-hero:before{content:"";position:absolute;z-index:0;pointer-events:none;
+ width:min(95vw,750px);height:min(95vw,750px);border-radius:50%;
+ background:radial-gradient(circle,#1aaa4730 0%,#9563220d 39%,transparent 71%);
+ filter:blur(27px)}
+.gs-jarvis-kicker{position:relative;z-index:2;font-size:10px;letter-spacing:.24em;
+ font-weight:720;color:#b5f6c8;text-align:center}
+.gs-jarvis-core{position:relative;z-index:1;width:100%;display:grid;place-items:center;
+ min-height:min(59dvh,580px);filter:hue-rotate(var(--gs-orb-hue,0deg))}
+.gs-jarvis-core .gs-reactor{height:min(58dvh,550px)!important;min-height:330px!important;width:100%;max-width:550px}
+.gs-jarvis-core .gs-reactor-touch{left:50%!important;top:47%!important;position:absolute!important;
+ transform:translate(-50%,-50%) scale(1.02)!important;transform-origin:center!important}
+.gs-jarvis-core .gs-reactor-status{bottom:12px!important;left:0;right:0}
+.gs-jarvis-core .gs-reactor-halo{box-shadow:0 0 110px #35b35c28}
+.gs-jarvis-status{position:relative;z-index:2;max-width:620px;text-align:center;
+ color:#b7d8c3;font-size:clamp(11px,1.8vw,14px);line-height:1.6;min-height:37px;padding:3px 12px}
+.gs-jarvis-activate{position:relative;z-index:2;max-width:340px;width:90%;
+ padding:13px 17px;border-radius:999px;
+ background:linear-gradient(95deg,#062d18,#14522c);border:1px solid var(--gs-user-green);
+ box-shadow:0 0 15px #00ff6621;color:#e9fff2;font-size:13px;font-weight:740;letter-spacing:.07em}
+.gs-jarvis-hero-compact{min-height:0;padding:12px 6px 8px}
+.gs-jarvis-hero-compact .gs-jarvis-core{min-height:220px}
+.gs-jarvis-hero-compact .gs-reactor{height:245px!important;min-height:245px!important}
+.gs-jarvis-hero-compact .gs-reactor-touch{transform:translate(-50%,-50%) scale(.63)!important}
+.gs-jarvis-hero-compact .gs-reactor-status{bottom:0!important}
+.gs-jarvis-trade-controls{display:flex;gap:8px;align-items:center;justify-content:center;flex-wrap:wrap;margin:5px auto}
+.gs-jarvis-trade-controls button{border:1px solid #5dba845c;border-radius:11px;padding:9px 15px;
+ background:#081b11;color:#d7fae1;font-weight:710;font-size:12px}
+.gs-jarvis-trade-controls button[aria-pressed=true]{background:#164a28;color:#e2ffe8;border-color:var(--gs-user-green);box-shadow:0 0 13px #00ff6629}
+.gs-jarvis-chart-panel{padding:10px 0 80px}
+.gs-jarvis-chart-panel .gs-chart-workspace{border-radius:17px;background:#09130ded!important;border:1px solid #6ba07a55}
+.gs-jarvis-paper-warning{font-size:10px;letter-spacing:.04em;color:#ffdca2;background:#a76f1c15;
+ padding:10px 12px;border:1px solid #ac804a5a;border-radius:9px;margin:4px 0 12px}
+.gs-jarvis-commandbar{
+ position:fixed;bottom:calc(9px + env(safe-area-inset-bottom,0px));left:50%;transform:translateX(-50%);
+ z-index:30;width:min(690px,calc(100% - 22px));display:flex;align-items:center;gap:4px;
+ border:1px solid #73d79e8b;border-radius:999px;box-shadow:0 13px 35px #000c,0 0 24px #17bf5e19;
+ background:linear-gradient(105deg,#08160fef,#0e2419f5);backdrop-filter:blur(18px);
+ padding:5px 6px 5px 18px;min-height:57px
+}
+.gs-jarvis-commandbar input{flex:1;min-width:0;background:transparent;border:none;outline:none;
+ color:#eaffee;font-size:13px;padding:11px 2px}
+.gs-jarvis-commandbar input::placeholder{color:#87a78f}
+.gs-jarvis-commandbar button{flex:0 0 auto;display:grid;place-items:center;border:0;border-radius:50%;
+ color:#d9fce3;background:#143926;min-width:38px;min-height:38px;font-size:18px;cursor:pointer}
+.gs-jarvis-commandbar .gs-jarvis-mic{background:#00b74b;color:#041e0c;font-size:18px}
+.gs-jarvis-commandbar button:disabled{opacity:.45}
+.gs-jarvis-commandbar button:focus-visible,.gs-jarvis-settings:focus-visible,
+.gs-jarvis-trade-controls button:focus-visible,.gs-jarvis-activate:focus-visible{
+ outline:2px solid var(--gs-user-gold);outline-offset:3px}
+.gs-jarvis-sr{position:absolute!important;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0)}
+.gs-jarvis-settings-sheet{position:fixed;z-index:31;right:12px;bottom:calc(83px + env(safe-area-inset-bottom,0px));
+ width:min(410px,calc(100% - 24px));max-height:min(65dvh,560px);overflow:auto;
+ border:1px solid #4a9566a8;border-radius:17px;background:#09170fef;box-shadow:0 23px 55px #000d;
+ backdrop-filter:blur(20px);padding:16px;display:flex;flex-direction:column;gap:13px}
+.gs-jarvis-sheet-header{display:flex;align-items:center;justify-content:space-between;font-size:16px}
+.gs-jarvis-sheet-header button{color:#defce7;font-size:20px;border:0;background:transparent}
+.gs-jarvis-settings-sheet label{display:flex;align-items:center;gap:11px;color:#d5f6dc;font-size:13px}
+.gs-jarvis-settings-sheet label input{accent-color:#00bb53}
+.gs-jarvis-settings-actions{display:flex;flex-wrap:wrap;gap:7px}
+.gs-jarvis-settings-actions button{background:#12331e;border:1px solid #45a56d6b;border-radius:9px;
+ color:#defce5;padding:9px 12px;font-size:12px}
+.gs-jarvis-theme-notice{font-size:11px;color:#a1caaa;line-height:1.5}
+.gs-jarvis-html-preview{background:white;border:1px solid #9ec8ae;border-radius:10px;
+ width:100%;height:250px}
+@media(max-width:460px){
+ .gs-jarvis-header{padding:10px 12px}
+ .gs-jarvis-brand strong{font-size:16px}
+ .gs-jarvis-brand small{font-size:7px}
+ .gs-jarvis-hero{min-height:calc(100dvh - 154px)}
+ .gs-jarvis-core{min-height:370px}
+ .gs-jarvis-core .gs-reactor{height:370px!important;min-height:370px!important}
+ .gs-jarvis-core .gs-reactor-touch{transform:translate(-50%,-50%) scale(.92)!important}
+ .gs-jarvis-hero-compact .gs-reactor{height:240px!important;min-height:240px!important}
+ .gs-jarvis-hero-compact .gs-reactor-touch{transform:translate(-50%,-50%) scale(.61)!important}
+ .gs-jarvis-status{font-size:12px}
+ .gs-jarvis-commandbar{min-height:55px;padding-left:14px}
+ .gs-jarvis-commandbar button{min-width:35px;min-height:35px}
+}
+@media(prefers-reduced-motion:reduce){.gs-jarvis-shell *{animation:none!important;transition:none!important}}
