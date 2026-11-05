@@ -111,6 +111,9 @@ def execute_approved_order(pending_order_id: int) -> tuple[bool, dict[str, Any],
         - Response data (dict)
         - HTTP status code (int)
     """
+    from greensoil_lab.read_only import denied_broker_write
+    return denied_broker_write("execute_approved_order")
+
     claimed = False
     try:
         # Get the pending order
