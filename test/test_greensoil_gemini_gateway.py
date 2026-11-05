@@ -39,6 +39,7 @@ class GeminiGatewayTests(unittest.TestCase):
         self.client = gateway.app.test_client()
         with gateway._LIMIT_LOCK:
             gateway._REQUEST_TIMES.clear()
+            gateway._AUTH_FAILURES.clear()
             gateway._DAILY_COUNTS.update(day=None, count=0)
 
     def tearDown(self):
@@ -99,6 +100,19 @@ class GeminiGatewayTests(unittest.TestCase):
         self.assertFalse(r.json["model_access_verified"])
         self.assertEqual(20, r.json["max_requests_per_day"])
         self.assertNotIn(ENV["GEMINI_API_KEY"], r.get_data(as_text=True))
+
+    def test_config_cors_preflight(self):
+        response = self.client.options("/api/config", headers={"Origin": ORIGIN})
+        self.assertEqual(204, response.status_code)
+        self.assertIn("GET", response.headers["Access-Control-Allow-Methods"])
+        self.assertIn("Authorization", response.headers["Access-Control-Allow-Headers"])
+
+    def test_wrong_secret_never_calls_provider(self):
+        with patch("urllib.request.urlopen", side_effect=AssertionError("provider called on bad token")):
+            response = self.client.post("/api/chat",
+                headers={"Origin": ORIGIN, "Authorization": "Bearer incorrect"},
+                json={"message": "Hello"})
+        self.assertEqual(401, response.status_code)
 
     def test_invalid_payload_and_write_denial(self):
         r = self.client.post("/api/chat", headers=HEADERS, json={"message": ""})
