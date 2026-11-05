@@ -83,3 +83,15 @@ synthetic-data watermark improve phone readability. Live feeds remain absent.
 - Live canvas draws 380 orange/gold glitter particles, moving curved plasma filaments and segmented holographic orbits; CSS enhances core depth.
 - Supports existing IDLE/LISTENING/THINKING/SPEAKING; renderer includes future PROCESSING/COMPLETED presentation modes. No real AI engine or market-data claims.
 - Static Pages read-only PAPER demo only; production services untouched.
+
+## V6 — JARVIS-first full-screen prototype (2026-11-06)
+
+- Home shows a large animated plasma core with no chart clutter.
+- Mobile-friendly fixed bottom command bar supports text and explicit tap-to-start browser mic.
+- Offline local command routing: trading mode, NIFTY or SENSEX chart, return to home.
+- Switching to trading mode reveals synthetic PAPER chart data only; no real market calls or order execution.
+- Optional sound effects and browser text-to-speech; reduced motion available.
+- User JSON theme import applies validated colors, geometry metadata and 80–800 particle count, with browser-local save, export and reset.
+- HTML import is visual preview ONLY: sandboxed iframe with a restrictive CSP, no scripts, external network or app code execution.
+- A separate Railway Gemini staging gateway has passed a real Gemini 3.5 Flash-Lite one-shot generation check, but is **not yet connected to this static Pages UI**, which has no public authenticated gateway pairing. Do not claim this browser uses a live AI brain.
+- Existing Railway production services, bots and Pine indicators are untouched.
