@@ -227,7 +227,7 @@ export default function GreenSoilMarketPreview() {
         </section>
         {trading && <section className="gs-jarvis-chart-panel" aria-label="Trading mode charts">
           <div className="gs-jarvis-paper-warning">DEMO DATA • NO BROKER ORDERS • NO LIVE NSE FEED</div>
-          <GreenSoilLab selectedSymbol={symbol}/>
+          <div className="gs-chart-workspace"><GreenSoilLab selectedSymbol={symbol}/></div>
         </section>}
       </main>
       {settings && <section className="gs-jarvis-settings-sheet" aria-label="Core settings">
