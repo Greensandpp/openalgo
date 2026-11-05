@@ -11,9 +11,15 @@ unavailable in the demo, by design.
 
 - CI creates a portable `greensoil-mobile-preview-demo` artifact, including
   an `index.html` suitable for static hosting. No hosting is enabled by CI.
-- `.github/workflows/greensoil-manual-pages.yml` may deploy this artifact to
-  GitHub Pages **only after a person triggers it**. It has **no push trigger**.
-- GitHub Pages is configured per repository. Deploying this workflow would
+- `.github/workflows/greensoil-manual-pages.yml` contains a deploy job
+  explicitly gated by repository variable `GREENSOIL_PAGES_APPROVED=true`.
+  Without that opt-in, the job skips on all pushes. Do not set it until
+  existing Pages settings have been checked. This workflow also declares
+  `workflow_dispatch`, though dispatch availability on a non-default branch
+  can be limited by GitHub.
+- GitHub Pages is configured per repository. Enabling the repository variable
+  and then pushing a commit to the lab branch can activate a Pages deployment.
+  Deploying this workflow would
   replace whatever site that repository currently hosts. **Before manually
   running it, check Settings > Pages for any existing site. Do not run if one
   must be preserved.** Instead use a separate, dedicated demo repository/site.
