@@ -174,3 +174,8 @@
 .gs-voice-disclaimer{font-size:10px;color:#91adc1;margin-bottom:0}
 @media(max-width:720px){.gs-reactor{height:270px}.gs-reactor-touch{transform:scale(.76)}.gs-reactor-status{bottom:4px}.gs-voice-form button{flex:0 0 auto}}
 @media(prefers-reduced-motion:reduce){.gs-reactor *{animation:none!important;transition:none!important}}
+
+
+.gs-voice-form .gs-voice-mic{color:#cef9ff;background:#102e42;border:1px solid #62c9d45a;min-width:100px}
+.gs-voice-form .gs-voice-mic:disabled{opacity:.48;cursor:not-allowed}
+.gs-voice-form button:focus-visible,.gs-voice-stop:focus-visible{outline:2px solid #82edfc;outline-offset:3px}
