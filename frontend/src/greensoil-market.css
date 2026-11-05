@@ -86,3 +86,38 @@
  .gs-chart-workspace{padding:1px;border-radius:16px}
  .gs-footer{flex-direction:column;line-height:1.7}
 }
+
+
+/* Mobile screenshot QA: prioritize the trading chart instead of long tables. */
+.gs-chart-workspace .gs-feed-settings,.gs-chart-workspace .gs-monitor-details,.gs-chart-workspace .gs-level-details{
+  border:1px solid #547da34a;border-radius:12px;background:#102034b8;color:#d7e8f7;overflow:hidden;
+}
+.gs-chart-workspace .gs-feed-settings summary,.gs-chart-workspace .gs-monitor-details summary,.gs-chart-workspace .gs-level-details summary{
+  cursor:pointer;list-style:none;padding:13px 15px;font-weight:650;font-size:13px;
+  display:flex;justify-content:space-between;align-items:center;gap:8px;
+}
+.gs-chart-workspace details summary::-webkit-details-marker{display:none}
+.gs-chart-workspace details summary::before{content:'+';color:#64e1ef;font-size:19px;line-height:1}
+.gs-chart-workspace details[open] summary::before{content:'−'}
+.gs-chart-workspace details summary span{color:#89a9c4;font-size:11px;font-weight:500}
+.gs-feed-settings-inner,.gs-monitor-content{padding:0 13px 13px}
+.gs-levels-grid{padding:4px 12px 12px;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}
+.gs-level-tile,.gs-zone-tile{border-radius:9px;background:#0c1b2f;border:1px solid #44678342;padding:10px}
+.gs-level-name{font-size:10px;color:#93b1c8;letter-spacing:.06em}
+.gs-level-price{font-size:15px;font-weight:650;color:#edf7ff;font-variant-numeric:tabular-nums;margin-top:3px}
+.gs-zones-heading{font-size:13px;font-weight:650;margin:6px 12px}
+.gs-zone-list{padding:0 12px 13px;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px}
+.gs-zone-tile{display:flex;flex-direction:column;gap:4px;min-width:0}
+.gs-zone-tile span{font-size:10px;color:#9cb3c8}
+.gs-zone-tile strong{font-size:12px;font-weight:600}
+.gs-price-chart{background:#071522;border:1px solid #46678566!important;border-radius:12px;position:relative}
+.gs-price-chart::after{content:"DEMO • SYNTHETIC MARKET DATA";position:absolute;z-index:3;pointer-events:none;left:9px;top:9px;padding:4px 7px;border-radius:6px;background:#111c2be8;color:#ffc982;font-size:9px;font-weight:700;letter-spacing:.07em}
+.gs-price-chart canvas{filter:invert(.92) hue-rotate(180deg)}
+@media(max-width:720px){
+ .gs-chart-workspace main{gap:9px;padding:10px}
+ .gs-chart-workspace main header p{font-size:11px}
+ .gs-chart-workspace main header h1{font-size:18px}
+ .gs-price-chart{height:350px!important}
+ .gs-zone-list{grid-template-columns:1fr}
+ .gs-zone-tile{flex-direction:row;align-items:center;justify-content:space-between}
+}
