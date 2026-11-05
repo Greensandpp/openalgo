@@ -41,3 +41,8 @@ tested.
 
 Never infer a live data feed, a trading signal or a profit forecast from this
 demo. Production bot, Pine and Railway are out of scope.
+
+## Mobile demo QA (November 2026)
+
+Compact collapsible detail panels, a dark chart preview and an explicit
+synthetic-data watermark improve phone readability. Live feeds remain absent.
