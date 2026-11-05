@@ -34,16 +34,27 @@ class TestGuardPlacement(unittest.TestCase):
                 with self.subTest(path=path, function=name):
                     self.assertIn(name, funcs)
                     fn = funcs[name]
-                    first = fn.body[:5]
-                    text = "\n".join(ast.unparse(node) for node in first)
-                    self.assertTrue(
-                        "denied_broker_write" in text or "raise_broker_write_blocked" in text,
-                        "Expected explicit early broker denial"
-                    )
-                    self.assertTrue(
-                        any(isinstance(node, (ast.Raise, ast.Return)) for node in first),
-                        "Expected early return or exception"
-                    )
+                    body = fn.body
+                    # Skip an optional function docstring; no executable code may
+                    # precede the guard's import and unconditional denial.
+                    if (body and isinstance(body[0], ast.Expr)
+                            and isinstance(body[0].value, ast.Constant)
+                            and isinstance(body[0].value.value, str)):
+                        body = body[1:]
+                    self.assertGreaterEqual(len(body), 2)
+                    self.assertIsInstance(body[0], ast.ImportFrom)
+                    self.assertEqual(body[0].module, "greensoil_lab.read_only")
+                    second = body[1]
+                    if isinstance(second, ast.Return):
+                        call = second.value
+                    elif isinstance(second, ast.Expr):
+                        call = second.value
+                    else:
+                        self.fail("Expected unconditional return or raising guard call")
+                    self.assertIsInstance(call, ast.Call)
+                    self.assertIsInstance(call.func, ast.Name)
+                    self.assertIn(call.func.id, ("denied_broker_write", "raise_broker_write_blocked"))
+                    self.assertIn(call.func.id, [n.name for n in body[0].names])
 
     def test_pending_approval_denied(self):
         path = ROOT / "services/pending_order_execution_service.py"
