@@ -41,7 +41,7 @@ class SmokeProbeTests(unittest.TestCase):
             calls.append(req.full_url)
             if req.full_url.endswith("pageSize=1000"):
                 return Response({"models": [
-                    {"name": "models/gemini-3.8-flash",
+                    {"name": "models/gemini-3.5-flash-lite",
                      "supportedGenerationMethods": ["generateContent"]}]})
             return Response({"candidates": [{"content": {"parts": [{"text": "READY"}]}}]})
         with patch.dict(os.environ, {"GEMINI_API_KEY": secret}, clear=True):
