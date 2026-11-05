@@ -2,14 +2,13 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import './index.css'
-import GreenSoilLab from './pages/GreenSoilLab'
+import GreenSoilMarketPreview from './pages/GreenSoilMarketPreview'
+import './greensoil-market.css'
 
 const root = document.getElementById('root')
 if (!root) throw new Error('GreenSoil preview root missing')
 createRoot(root).render(
   <StrictMode>
-    <div className="min-h-screen bg-background text-foreground">
-      <GreenSoilLab />
-    </div>
+    <GreenSoilMarketPreview />
   </StrictMode>
 )
