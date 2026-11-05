@@ -106,9 +106,11 @@ export default function GreenSoilLab() {
         if (!rows.every(x => typeof x === 'object' && x !== null && ['NIFTY','SENSEX'].includes((x as Record<string, unknown>).index as string))) throw new Error('Invalid watch indexes')
         setWatchRows(rows as Array<{index:string;status:string;bias?:string;reason?:string;as_of?:string}>)
         const spikes = Array.isArray(data.spikes) ? data.spikes : []
-        const validSpikes = (spikes.filter(x => typeof x === 'object' && x !== null &&
-          ['NIFTY','SENSEX'].includes((x as Record<string, unknown>).index as string))
-          as Array<{index:string;status:string;direction?:string;index_change_pct_delta?:number;as_of?:string}>)
+        const validSpikes = spikes.filter((x): x is {
+          index: string; status: string; direction?: string; index_change_pct_delta?: number; as_of?: string
+        } => typeof x === 'object' && x !== null &&
+          ['NIFTY', 'SENSEX'].includes((x as { index?: string }).index ?? '') &&
+          typeof (x as { status?: unknown }).status === 'string')
         setSpikeRows(validSpikes)
         for (const spike of validSpikes) {
           if (spike.status !== 'EARLY_WARNING_TO_REVIEW') continue
