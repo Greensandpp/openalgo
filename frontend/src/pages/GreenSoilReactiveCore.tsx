@@ -4,9 +4,9 @@
  */
 import { useCallback, useEffect, useRef, useState } from 'react'
 
-export type CoreMode = 'idle' | 'listening' | 'thinking' | 'speaking'
+export type CoreMode = 'idle' | 'listening' | 'thinking' | 'processing' | 'completed' | 'speaking'
 type Dot = { phase: number; orbit: number; radius: number; speed: number; size: number; layer: number }
-const DOT_COUNT = 220
+const DOT_COUNT = 380
 const DOTS: Dot[] = Array.from({ length: DOT_COUNT }, (_, i) => ({
   phase: i * 2.3999632, orbit: 20 + (i * 47.7) % 114,
   radius: 0.28 + ((i * 19) % 70) / 100,
@@ -37,11 +37,11 @@ export function ReactiveCore({ mode, reducedMotion, onTouch }: {
       context.clearRect(0, 0, width, height)
       const t = ms / 1000
       const intent = modeRef.current
-      const boost = intent === 'thinking' ? 1.5 : intent === 'listening' ? 1.17 : intent === 'speaking' ? 1.3 : 1
+      const boost = intent === 'processing' ? 2.5 : intent === 'thinking' ? 1.8 : intent === 'listening' ? 1.22 : intent === 'completed' ? .65 : intent === 'speaking' ? 1.45 : 1
       const glow = context.createRadialGradient(center, center, 15, center, center, 130)
-      glow.addColorStop(0, intent === 'listening' ? 'rgba(100,246,203,.16)' : 'rgba(85,215,255,.17)')
-      glow.addColorStop(.65, 'rgba(91,102,244,.08)')
-      glow.addColorStop(1, 'rgba(19,43,122,0)')
+      glow.addColorStop(0, intent === 'listening' ? 'rgba(255,194,67,.21)' : 'rgba(255,111,18,.23)')
+      glow.addColorStop(.65, 'rgba(255,87,15,.13)')
+      glow.addColorStop(1, 'rgba(89,25,4,0)')
       context.fillStyle = glow
       context.beginPath()
       context.arc(center, center, 137, 0, Math.PI * 2)
@@ -58,19 +58,19 @@ export function ReactiveCore({ mode, reducedMotion, onTouch }: {
         context.beginPath()
         context.arc(x, y, dot.size * (1 + twinkle * .4), 0, Math.PI * 2)
         context.fillStyle = dot.layer === 2
-          ? `rgba(185,150,255,${.24 + twinkle * .6})`
+          ? `rgba(255,226,132,${.25 + twinkle * .73})`
           : dot.layer === 1
-            ? `rgba(64,241,236,${.2 + twinkle * .74})`
-            : `rgba(232,250,255,${.2 + twinkle * .75})`
+            ? `rgba(255,100,28,${.2 + twinkle * .74})`
+            : `rgba(255,249,214,${.3 + twinkle * .68})`
         context.shadowBlur = 11 * twinkle
-        context.shadowColor = dot.layer === 2 ? '#8e68fd' : '#24dfff'
+        context.shadowColor = dot.layer === 2 ? '#ffd65a' : '#ff651c'
         context.fill()
       }
       // Holographic architecture rings: segmented arcs + sweeping telemetry.
       context.save()
       context.translate(center, center)
       context.globalCompositeOperation = 'screen'
-      const velocity = intent === 'thinking' ? 2.1 : intent === 'speaking' ? 1.55 : 1
+      const velocity = intent === 'processing' ? 2.9 : intent === 'thinking' ? 2.1 : intent === 'speaking' ? 1.55 : 1
       for (let orbit = 0; orbit < 4; orbit++) {
         const radius = 52 + orbit * 17
         const rotation = t * (.17 + orbit * .07) * velocity * (orbit % 2 ? -1 : 1)
@@ -81,8 +81,8 @@ export function ReactiveCore({ mode, reducedMotion, onTouch }: {
           context.beginPath()
           context.arc(0, 0, radius, start, start + Math.PI * 1.45 / segments)
           context.strokeStyle = orbit % 2
-            ? `rgba(255,185,123,${.20 + .26 * Math.sin(t + arc * .45) ** 2})`
-            : `rgba(250,143,214,${.21 + .33 * Math.cos(t + arc * .5) ** 2})`
+            ? `rgba(255,212,100,${.20 + .35 * Math.sin(t + arc * .45) ** 2})`
+            : `rgba(255,105,26,${.21 + .43 * Math.cos(t + arc * .5) ** 2})`
           context.lineWidth = orbit === 0 ? 1.6 : .8
           context.stroke()
         }
@@ -93,7 +93,7 @@ export function ReactiveCore({ mode, reducedMotion, onTouch }: {
         context.beginPath()
         context.moveTo(Math.cos(angle) * 18, Math.sin(angle) * 18)
         context.lineTo(Math.cos(angle) * 102, Math.sin(angle) * 102)
-        context.strokeStyle = `rgba(255,177,223,${pulse})`
+        context.strokeStyle = `rgba(255,194,82,${pulse})`
         context.lineWidth = .55
         context.stroke()
       }
@@ -101,17 +101,46 @@ export function ReactiveCore({ mode, reducedMotion, onTouch }: {
       const spark = 2.6 + Math.sin(t * (intent === 'speaking' ? 13 : 2.8)) * 1.1
       const energy = context.createRadialGradient(0, 0, 0, 0, 0, 42)
       energy.addColorStop(0, 'rgba(255,250,232,.95)')
-      energy.addColorStop(.12, 'rgba(255,183,226,.87)')
-      energy.addColorStop(.35, 'rgba(235,109,183,.39)')
-      energy.addColorStop(1, 'rgba(231,97,169,0)')
+      energy.addColorStop(.12, 'rgba(255,201,83,.87)')
+      energy.addColorStop(.35, 'rgba(255,102,18,.43)')
+      energy.addColorStop(1, 'rgba(255,75,8,0)')
       context.fillStyle = energy
       context.beginPath()
       context.arc(0, 0, 42, 0, Math.PI * 2)
       context.fill()
       context.beginPath()
       context.arc(0, 0, spark, 0, Math.PI * 2)
-      context.fillStyle = '#fff6e9'
+      context.fillStyle = '#fff9d8'
       context.fill()
+      context.restore()
+      // Rotating plasma filaments are volumetric-looking layered Bézier arcs.
+      // Deterministic motion avoids random frame flicker on mobile devices.
+      context.save()
+      context.translate(center, center)
+      context.globalCompositeOperation = 'screen'
+      for (let filament = 0; filament < 18; filament++) {
+        const phase = filament * Math.PI * 2 / 18 + t * .24 * boost
+        const twist = Math.sin(t * .9 + filament * 2.1)
+        const innerRadius = 16 + 9 * Math.abs(twist)
+        const outerRadius = 57 + 42 * Math.abs(Math.sin(t * .28 + filament))
+        const startX = Math.cos(phase) * innerRadius
+        const startY = Math.sin(phase) * innerRadius
+        const endX = Math.cos(phase + .6 * twist) * outerRadius
+        const endY = Math.sin(phase + .6 * twist) * outerRadius * .82
+        context.beginPath()
+        context.moveTo(startX, startY)
+        context.bezierCurveTo(
+          Math.cos(phase + .75) * 65, Math.sin(phase + .75) * 43,
+          Math.cos(phase - .9) * 83, Math.sin(phase - .9) * 69,
+          endX, endY
+        )
+        const intensity = .18 + .49 * Math.abs(Math.sin(t * 1.6 + filament * 1.7))
+        context.lineWidth = filament % 4 === 0 ? 1.5 : .65
+        context.strokeStyle = `rgba(255,${filament % 3 === 0 ? 224 : 116},38,${intensity})`
+        context.shadowBlur = filament % 4 === 0 ? 18 : 8
+        context.shadowColor = filament % 3 === 0 ? '#ffdc65' : '#ff611b'
+        context.stroke()
+      }
       context.restore()
       context.shadowBlur = 0
       frame = requestAnimationFrame(drawing)
@@ -124,7 +153,7 @@ export function ReactiveCore({ mode, reducedMotion, onTouch }: {
         const y = center + Math.sin(dot.phase) * dot.orbit * .55
         context.beginPath()
         context.arc(x, y, dot.size, 0, Math.PI * 2)
-        context.fillStyle = dot.layer === 2 ? '#786ac5' : '#44adb9'
+        context.fillStyle = dot.layer === 2 ? '#f5b754' : '#ff742c'
         context.fill()
       }
     }
