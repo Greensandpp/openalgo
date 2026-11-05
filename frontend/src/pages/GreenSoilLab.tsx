@@ -81,7 +81,7 @@ function ChartView({ symbol, baseline, overlays }: { symbol: IndexSymbol; baseli
       element.innerHTML = ''
     }
   }, [symbol, baseline, overlays])
-  return <div ref={host} className="h-[380px] w-full overflow-hidden rounded-md border" />
+  return <div ref={host} className="gs-price-chart h-[380px] w-full overflow-hidden rounded-md border" />
 }
 export default function GreenSoilLab() {
   const [symbol, setSymbol] = useState<IndexSymbol>('NIFTY')
@@ -263,7 +263,9 @@ export default function GreenSoilLab() {
             : 'DEMO MODE: all candles and levels are synthetic'}
         </p>
       </header>
-      <section className="rounded-md border p-3">
+      <details className="gs-feed-settings">
+        <summary>8:30 baseline feed settings (optional)</summary>
+        <div className="gs-feed-settings-inner">
         <label htmlFor="baseline-json" className="block text-sm font-medium">Paste canonical 8:30 report JSON (today IST)</label>
         <textarea id="baseline-json" value={json} onChange={event => setJson(event.target.value)}
           rows={3} spellCheck={false} className="mt-2 w-full rounded border bg-background p-2 font-mono text-xs"
@@ -273,7 +275,8 @@ export default function GreenSoilLab() {
           <button type="button" className="rounded border px-3 py-2" onClick={() => {setSourceMode('auto');setBaseline(null);setJson('');setError('')}}>Resume automatic feed</button>
         </div>
         {error && <p role="alert" className="mt-2 text-sm text-red-600">Rejected: {error}</p>}
-      </section>
+        </div>
+      </details>
       <div className="flex gap-2" role="group" aria-label="Index">
         {(['NIFTY', 'SENSEX'] as const).map(value =>
           <button key={value} type="button" aria-pressed={symbol === value}
@@ -281,7 +284,9 @@ export default function GreenSoilLab() {
             onClick={() => setSymbol(value)}>{value}</button>
         )}
       </div>
-      <section className="rounded-md border p-3" aria-label="Intraday event watch">
+      <details className="gs-monitor-details" aria-label="Intraday event watch">
+        <summary>OI + spike radar <span>· {watchRows.length ? "Evidence available" : "Offline"}</span></summary>
+        <div className="gs-monitor-content">
         <h2 className="font-semibold">Intraday Spike + OI Watch (monitor only)</h2>
         <p role="status" className="text-xs text-muted-foreground">{watchStatus}</p>
         <div className="mt-2 grid gap-2 sm:grid-cols-2">
@@ -304,8 +309,11 @@ export default function GreenSoilLab() {
           {events.length ? events.map(event => <p key={event} className="py-1">{event}</p>) : 'No corroborated spike observations'}
         </div>
         <p className="mt-2 text-xs">No news provider connected. Early warnings are not entries; 5-minute candle confirmation required. No new price targets generated. Log remains in this browser tab only.</p>
-      </section>
-      <section className="rounded-md border p-3" aria-label="Versioned intraday proposals">
+        </div>
+      </details>
+      <details className="gs-monitor-details" aria-label="Versioned intraday proposals">
+        <summary>Intraday scenario history <span>· {overlays.length} revisions</span></summary>
+        <div className="gs-monitor-content">
         <h2 className="font-semibold">Intraday revised scenarios (watch only)</h2>
         <p className="text-xs text-muted-foreground" role="status">{overlayStatus}</p>
         <p className="text-xs">Original 8:30 baseline remains unchanged. Purple marks = latest proposed levels, not predictions or orders.</p>
@@ -316,29 +324,33 @@ export default function GreenSoilLab() {
             <div>Entry {x.entry} · SL {x.sl} · TP1 {x.tp1} · TP2 {x.tp2} · TP3 {x.tp3}</div>
           </div>
         )}
-      </section>
+        </div>
+      </details>
       <ChartView symbol={symbol} baseline={baseline} overlays={overlays} />
       <p className="text-xs text-muted-foreground">
         CE green · PE red · PDH/PDL/PDC gray · Support teal · Resistance orange · NO TRADE amber.
         Zone boundaries are lines, not filled areas. Entries are plans, NOT trade signals.
       </p>
-      <div className="grid grid-cols-2 gap-2 text-xs sm:grid-cols-4">
-        {LEVELS.map(key =>
-          <div key={key} className="rounded border p-2">
-            <div className="text-muted-foreground">{key.replaceAll('_', ' ')}</div>
-            <div className="font-semibold tabular-nums">{active.levels[key].toLocaleString('en-IN')}</div>
-          </div>
-        )}
-      </div>
-      <h2 className="text-base font-semibold">Support, resistance and NO TRADE zones</h2>
-      <div className="grid grid-cols-1 gap-2 text-sm sm:grid-cols-3">
-        {active.zones.map((zone, i) =>
-          <div key={`${zone.name}-${i}`} className="rounded border p-3">
-            <div className="font-medium">{zone.name.replace('_', ' ')}</div>
-            <div className="tabular-nums">{zone.low.toLocaleString('en-IN')} – {zone.high.toLocaleString('en-IN')}</div>
-          </div>
-        )}
-      </div>
+      <details className="gs-level-details">
+        <summary>View all 8:30 levels and zones <span>({LEVELS.length} levels)</span></summary>
+        <div className="gs-levels-grid">
+          {LEVELS.map(key =>
+            <div key={key} className="gs-level-tile">
+              <div className="gs-level-name">{key.replaceAll('_', ' ')}</div>
+              <div className="gs-level-price">{active.levels[key].toLocaleString('en-IN')}</div>
+            </div>
+          )}
+        </div>
+        <h2 className="gs-zones-heading">Support, resistance and NO TRADE zones</h2>
+        <div className="gs-zone-list">
+          {active.zones.map((zone, i) =>
+            <div key={`${zone.name}-${i}`} className="gs-zone-tile">
+              <span>{zone.name.replace('_', ' ')}</span>
+              <strong>{zone.low.toLocaleString('en-IN')} – {zone.high.toLocaleString('en-IN')}</strong>
+            </div>
+          )}
+        </div>
+      </details>
     </main>
   )
 }
