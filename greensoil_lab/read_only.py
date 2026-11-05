@@ -21,3 +21,12 @@ def install_read_only_http_guard(app):
                 "code": "GREENSOIL_LAB_READ_ONLY",
                 "message": "GreenSoil lab forbids HTTP write operations; no orders allowed.",
             }), 403
+
+
+def denied_broker_write(operation: str):
+    """Return a deterministic failure for internal broker-order operations."""
+    return False, {
+        "status": "blocked",
+        "code": "GREENSOIL_LAB_READ_ONLY",
+        "message": f"GreenSoil lab forbids broker mutation: {operation}",
+    }, 403
