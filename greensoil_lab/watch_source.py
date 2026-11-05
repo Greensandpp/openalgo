@@ -15,6 +15,7 @@ from flask import Blueprint, jsonify
 
 from greensoil_lab.monitor_events import evaluate_watch
 from greensoil_lab.market_adapter import adapt_verified_feed
+from greensoil_lab.spike_detector import detect_spikes
 
 bp = Blueprint("greensoil_watch", __name__)
 IST = ZoneInfo("Asia/Kolkata")
@@ -42,7 +43,17 @@ def local_watch(now: datetime, *, root: str | None = None) -> dict:
     # Preferred structured collector contract: independently timestamped full
     # index-weight constituents and option OI; never infer missing evidence.
     if "indexes" in document:
-        return adapt_verified_feed(document, now=now)
+        result = adapt_verified_feed(document, now=now)
+        if "previous_indexes" in document:
+            result["spikes"] = detect_spikes(
+                {"source": source, "indexes": document["previous_indexes"]},
+                {"source": source, "indexes": document["indexes"]},
+                now=now,
+            )
+        else:
+            result["spikes"] = []
+            result["spike_status"] = "PREVIOUS_OBSERVATION_MISSING"
+        return result
     snapshots = document.get("snapshots")
     if not isinstance(snapshots, list) or len(snapshots) != 2:
         raise ValueError("one snapshot per index required")
