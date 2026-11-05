@@ -180,6 +180,10 @@ def create_app():
 
     install_read_only_http_guard(app)
 
+    # GET-only local baseline handoff; never accepts report uploads or orders.
+    from greensoil_lab.baseline_source import bp as greensoil_baseline_bp
+    app.register_blueprint(greensoil_baseline_bp)
+
     # Initialize SocketIO
     socketio.init_app(app)  # Link SocketIO to the Flask app
 
