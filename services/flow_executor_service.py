@@ -878,7 +878,7 @@ class NodeExecutor:
     # === Order Nodes ===
 
     def execute_place_order(self, node_data: dict) -> dict:
-        """Execute Place Order node"""
+        from greensoil_lab.read_only import raise_broker_write_blocked\n        raise_broker_write_blocked("flow.execute_place_order")\n\n        """Execute Place Order node"""
         try:
             order = self.resolve_standard_order(node_data, "Place order")
         except ValueError as exc:
@@ -905,7 +905,7 @@ class NodeExecutor:
         return result
 
     def execute_smart_order(self, node_data: dict) -> dict:
-        """Execute Smart Order node"""
+        from greensoil_lab.read_only import raise_broker_write_blocked\n        raise_broker_write_blocked("flow.execute_smart_order")\n\n        """Execute Smart Order node"""
         try:
             order = self.resolve_standard_order(
                 node_data, "Smart order", allow_zero_quantity=True
@@ -1063,7 +1063,7 @@ class NodeExecutor:
         return fallback
 
     def execute_options_order(self, node_data: dict) -> dict:
-        """Execute Options Order node"""
+        from greensoil_lab.read_only import raise_broker_write_blocked\n        raise_broker_write_blocked("flow.execute_options_order")\n\n        """Execute Options Order node"""
         try:
             values = RuntimeOrderResolver(self.context, node_data, "Options order")
             underlying = values.text("underlying", default="NIFTY").upper()
@@ -1169,7 +1169,7 @@ class NodeExecutor:
         return result
 
     def execute_options_multi_order(self, node_data: dict) -> dict:
-        """Execute Options Multi-Order node (multi-leg strategy)"""
+        from greensoil_lab.read_only import raise_broker_write_blocked\n        raise_broker_write_blocked("flow.execute_options_multi_order")\n\n        """Execute Options Multi-Order node (multi-leg strategy)"""
         # Debug: log node_data keys to understand structure
         self.log(f"Options multi-order node_data keys: {list(node_data.keys())}")
 
@@ -1610,7 +1610,7 @@ class NodeExecutor:
         return None
 
     def execute_modify_order(self, node_data: dict) -> dict:
-        """Execute Modify Order node.
+        from greensoil_lab.read_only import raise_broker_write_blocked\n        raise_broker_write_blocked("flow.execute_modify_order")\n\n        """Execute Modify Order node.
 
         Every attribute except the ones being changed is read back from the live
         order. The editor only collects order id, new price and new quantity, so
@@ -1718,7 +1718,7 @@ class NodeExecutor:
         return result
 
     def execute_cancel_order(self, node_data: dict) -> dict:
-        """Execute Cancel Order node"""
+        from greensoil_lab.read_only import raise_broker_write_blocked\n        raise_broker_write_blocked("flow.execute_cancel_order")\n\n        """Execute Cancel Order node"""
         order_id = self.context.interpolate(str(node_data.get("orderId", "")))
         self.log(f"Cancelling order: {order_id}")
         result = self.client.cancel_order(order_id=order_id)
@@ -1728,7 +1728,7 @@ class NodeExecutor:
         return result
 
     def execute_cancel_all_orders(self, node_data: dict) -> dict:
-        """Execute Cancel All Orders node"""
+        from greensoil_lab.read_only import raise_broker_write_blocked\n        raise_broker_write_blocked("flow.execute_cancel_all_orders")\n\n        """Execute Cancel All Orders node"""
         self.log("Cancelling all orders")
         result = self.client.cancel_all_orders()
         self.log(
@@ -1741,7 +1741,7 @@ class NodeExecutor:
         return result
 
     def execute_close_positions(self, node_data: dict) -> dict:
-        """Execute Close Positions node - squares off positions.
+        from greensoil_lab.read_only import raise_broker_write_blocked\n        raise_broker_write_blocked("flow.execute_close_positions")\n\n        """Execute Close Positions node - squares off positions.
 
         Honours the symbol/exchange/product filter the node advertises. The
         filter fields were read by nothing: whatever the user set, the executor
@@ -1779,7 +1779,7 @@ class NodeExecutor:
         return result
 
     def execute_basket_order(self, node_data: dict) -> dict:
-        """Execute Basket Order node - places multiple orders in batch"""
+        from greensoil_lab.read_only import raise_broker_write_blocked\n        raise_broker_write_blocked("flow.execute_basket_order")\n\n        """Execute Basket Order node - places multiple orders in batch"""
         orders_raw = node_data.get("orders", "")
         if isinstance(orders_raw, str):
             orders_raw = self.context.resolve_raw(orders_raw)
@@ -1960,7 +1960,7 @@ class NodeExecutor:
         return result
 
     def execute_split_order(self, node_data: dict) -> dict:
-        """Execute Split Order node"""
+        from greensoil_lab.read_only import raise_broker_write_blocked\n        raise_broker_write_blocked("flow.execute_split_order")\n\n        """Execute Split Order node"""
         try:
             order = self.resolve_standard_order(node_data, "Split order")
             values = RuntimeOrderResolver(self.context, node_data, "Split order")
