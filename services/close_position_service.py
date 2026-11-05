@@ -80,6 +80,10 @@ def close_position_with_auth(
         - Response data (dict)
         - HTTP status code (int)
     """
+    # GreenSoil lab: deny this internal broker mutation unconditionally.
+    from greensoil_lab.read_only import denied_broker_write
+    return denied_broker_write("close_position_with_auth")
+
     position_request_data = copy.deepcopy(original_data)
     if "apikey" in position_request_data:
         position_request_data.pop("apikey", None)
