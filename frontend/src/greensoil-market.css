@@ -582,3 +582,26 @@ color:#eafff0;padding:10px 11px;font-size:12px}
 @media(prefers-reduced-motion:reduce){
  .gs-jarvis-core .gs-reactor-halo,.gs-jarvis-core .gs-reactor-flash{animation:none!important}
 }
+
+/* V6.9: visible living emerald reactor; idle remains animated. */
+.gs-jarvis-greeting{position:relative;z-index:2;color:#dcffe8;text-align:center;font-size:clamp(13px,2.8vw,18px);font-weight:700;line-height:1.45;letter-spacing:.025em;text-shadow:0 0 15px #23e77f83;max-width:92vw}
+.gs-jarvis-welcome,.gs-jarvis-resume{z-index:2;position:relative;border:1px solid #38dc8a83;background:#062918c7;color:#d9ffe9;border-radius:20px;padding:9px 18px;font-size:12px;font-weight:650;cursor:pointer}
+.gs-jarvis-resume{box-shadow:0 0 20px #0aff7650}
+.gs-jarvis-core .gs-reactor-sphere{width:136px;height:136px;
+ background:radial-gradient(circle at 39% 29%,#d6fff5bb 0%,#2dff9b75 12%,#009d6b65 28%,#002e238a 57%,#00140fce 78%,#00100b 100%);
+ border:1px solid #77ffbcaa;box-shadow:inset 0 0 32px #08ff8d45,0 0 36px #19ff947b,0 0 85px #07c16e50;
+ animation:gs-reactor-core-alive 4s ease-in-out infinite}
+.gs-jarvis-core .gs-reactor-mesh{background:repeating-conic-gradient(from 5deg,#9bffbc63 0 1deg,transparent 2deg 12deg);animation-duration:6s}
+.gs-jarvis-core .gs-reactor-eye{background:#a9ffd8;filter:blur(25px);animation-duration:2.5s}
+.gs-jarvis-core .gs-reactor-halo{background:radial-gradient(circle,#12e98732,#0ee97913 38%,transparent 72%);animation:gs-reactor-breathe 2.7s ease-in-out infinite}
+.gs-jarvis-core .gs-reactor-orbit{border-color:#51ffa88c;box-shadow:0 0 22px #15ff936e,inset 0 0 17px #70ffbe20}
+.gs-jarvis-core .gs-reactor-orbit-a{animation-duration:7s}
+.gs-jarvis-core .gs-reactor-orbit-b{animation-duration:10s;border-color:#8fffcd99}
+.gs-jarvis-core .gs-reactor-orbit-c{animation-duration:9s;border-color:#ccffdc9d}
+.gs-jarvis-core .gs-particle-canvas{opacity:1;filter:hue-rotate(88deg) saturate(1.28)}
+@keyframes gs-reactor-core-alive{0%,100%{filter:brightness(.89) saturate(1);box-shadow:inset 0 0 28px #08ff8d45,0 0 30px #19ff947b,0 0 68px #07c16e50}
+50%{filter:brightness(1.37) saturate(1.3);box-shadow:inset 0 0 40px #08ff8d78,0 0 55px #19ff94a6,0 0 105px #07c16e80}}
+.gs-jarvis-core .gs-motion-off .gs-reactor-sphere,.gs-jarvis-core .gs-motion-off .gs-reactor-halo,.gs-jarvis-core .gs-motion-off .gs-reactor-mesh,.gs-jarvis-core .gs-motion-off .gs-reactor-eye,.gs-jarvis-core .gs-motion-off .gs-reactor-orbit{animation:none!important}
+@media(prefers-reduced-motion:reduce){
+.gs-jarvis-core .gs-reactor-sphere,.gs-jarvis-core .gs-reactor-halo{animation:none!important}
+}
