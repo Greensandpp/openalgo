@@ -6,6 +6,7 @@ import { useEffect, useRef, useState, type CSSProperties } from 'react'
 import GreenSoilLab from './GreenSoilLab'
 import { ReactiveCore, type CoreMode } from './GreenSoilReactiveCore'
 import { parseJarvisIntent } from '../lib/greensoilJarvisIntent'
+import { forgetDevicePairing, restoreDevicePairing, saveDevicePairing } from '../lib/greensoilSecurePairing'
 
 type Index = 'NIFTY' | 'SENSEX'
 type Preset = {
@@ -69,7 +70,7 @@ export default function GreenSoilMarketPreview() {
   const [voicePreference, setVoicePreference] = useState('auto')
   const [voiceOptions, setVoiceOptions] = useState<Array<{id:string;label:string}>>([])
   const [voiceSpeed, setVoiceSpeed] = useState(.96)
-  const [voiceProvider, setVoiceProvider] = useState<'browser'|'elevenlabs'>('browser')
+  const [voiceProvider, setVoiceProvider] = useState<'browser'|'elevenlabs'>('elevenlabs')
   const [audioStatus, setAudioStatus] = useState('Browser voice ready. ElevenLabs connection not configured.')
   const [micSupported, setMicSupported] = useState(false)
   const [preset, setPreset] = useState<Preset>(DEFAULT_PRESET)
@@ -79,6 +80,7 @@ export default function GreenSoilMarketPreview() {
   const [gatewayToken, setGatewayToken] = useState('')
   const [gatewayConnected, setGatewayConnected] = useState(false)
   const [rememberTab, setRememberTab] = useState(false)
+  const [rememberDevice, setRememberDevice] = useState(true)
   const [preferencesLoaded, setPreferencesLoaded] = useState(false)
   const [gatewayStatus, setGatewayStatus] = useState('Private Gemini staging pairing pending')
   const [askingGemini, setAskingGemini] = useState(false)
@@ -90,6 +92,7 @@ export default function GreenSoilMarketPreview() {
   const sessionRef = useRef(0)
   const requestRef = useRef<AbortController | null>(null)
   const speechRef = useRef<SpeechSynthesisUtterance | null>(null)
+  const activePairRef = useRef(0)
 
   useEffect(() => {
     let clearVoiceListener: (()=>void) | undefined
@@ -133,7 +136,31 @@ export default function GreenSoilMarketPreview() {
       }
     } catch { /* Browsers may block sessionStorage. */ }
     setPreferencesLoaded(true)
+    // Reconnect only to the trusted, fixed Railway STAGING origin. Restore
+    // never silently issues provider/API secrets or any broker action.
+    const restoreVersion = ++activePairRef.current
+    void restoreDevicePairing().then(async token => {
+      if (!token || restoreVersion !== activePairRef.current) return
+      setGatewayStatus('Restoring saved device pairing...')
+      const response = await fetch(DEFAULT_GATEWAY_URL.replace(/\/$/,'') + '/api/config', {
+        headers:{Authorization:'Bearer '+token}, credentials:'omit',cache:'no-store',
+        signal:AbortSignal.timeout(12000),
+      })
+      if (!response.ok) throw Error('Pairing expired')
+      const doc:unknown = await response.json()
+      if (!doc || typeof doc !== 'object' || (doc as {orders_enabled?:unknown}).orders_enabled !== false)
+        throw Error('Gateway safety verification failed')
+      if (restoreVersion !== activePairRef.current) return
+      setGatewayToken(token)
+      setGatewayConnected(true)
+      setRememberDevice(true)
+      setGatewayStatus('Private Gemini gateway reconnected automatically on this device.')
+    }).catch(()=>{
+      if (restoreVersion === activePairRef.current)
+        setGatewayStatus('Saved pairing unavailable or expired. Pair once in Settings to restore access.')
+    })
     return () => {
+      activePairRef.current += 1
       clearVoiceListener?.()
       micRef.current?.stop()
       requestRef.current?.abort()
@@ -306,7 +333,17 @@ export default function GreenSoilMarketPreview() {
       }
       setGatewayConnected(true)
       saveTabPairing(gatewayToken, rememberTab)
-      setGatewayStatus('Paired with private staging Gemini gateway. Requests limited.')
+      if (rememberDevice) {
+        try {
+          await saveDevicePairing(gatewayToken)
+          setGatewayStatus('Connected. Encrypted device pairing saved for automatic reconnect.')
+        } catch {
+          setGatewayStatus('Connected, but this browser blocked device storage. Pairing may be needed next time.')
+        }
+      } else {
+        await forgetDevicePairing().catch(()=>undefined)
+        setGatewayStatus('Connected for this session. Device saving is turned off.')
+      }
     } catch {
       setGatewayConnected(false)
       setGatewayStatus('Pairing failed. Check URL, token, gateway availability and browser permissions.')
@@ -480,7 +517,7 @@ export default function GreenSoilMarketPreview() {
         </div>
         <div className="gs-jarvis-gateway-settings">
           <strong>Gemini AI — Private staging pairing</strong>
-          <p>Google and ElevenLabs API keys stay on Railway. This field uses only your separate private gateway token. By default it is cleared on refresh; optional same-tab remembering is less secure on shared devices.</p>
+          <p>Gemini and ElevenLabs API keys stay on Railway. On your own phone, the separate gateway token can be encrypted in browser device storage and automatically revalidated on future visits. Avoid this on shared phones; clearing browser site data will remove the pairing.</p>
           <label className="gs-jarvis-gateway-label" htmlFor="gs-gateway-url">Railway HTTPS URL</label>
           <input id="gs-gateway-url" inputMode="url" autoComplete="off"
             placeholder="https://your-gateway.up.railway.app/"
@@ -489,10 +526,20 @@ export default function GreenSoilMarketPreview() {
           <input id="gs-gateway-token" type="password" autoComplete="off"
             placeholder="Enter private Railway gateway token"
             value={gatewayToken} onChange={e=>{setGatewayConnected(false);setGatewayToken(e.target.value);saveTabPairing('', false)}} />
-          <label className="gs-jarvis-remember-tab"><input type="checkbox" checked={rememberTab} onChange={e=>{setRememberTab(e.target.checked);saveTabPairing(gatewayToken,e.target.checked)}}/> Remember gateway token for this browser tab (not recommended on shared phones)</label>
+          <label className="gs-jarvis-remember-tab"><input type="checkbox" checked={rememberDevice} onChange={e=>{
+            setRememberDevice(e.target.checked)
+            if (!e.target.checked) void forgetDevicePairing()
+          }}/> Save encrypted pairing on this device and reconnect automatically (personal phone only)</label>
+          <label className="gs-jarvis-remember-tab"><input type="checkbox" checked={rememberTab} onChange={e=>{setRememberTab(e.target.checked);saveTabPairing(gatewayToken,e.target.checked)}}/> Remember token in current tab only (optional)</label>
           <div className="gs-jarvis-settings-actions">
             <button type="button" onClick={()=>void pairGateway()}>Connect Gemini</button>
-            <button type="button" onClick={()=>{setGatewayConnected(false);setGatewayToken('');setRememberTab(false);saveTabPairing('',false);setGatewayStatus('Disconnected. Saved tab token cleared.')}}>Disconnect</button>
+            <button type="button" onClick={()=>{
+              activePairRef.current+=1
+              setGatewayConnected(false);setGatewayToken('');setRememberTab(false)
+              saveTabPairing('',false)
+              void forgetDevicePairing().catch(()=>undefined)
+              setGatewayStatus('Disconnected. Saved device and tab pairing cleared.')
+            }}>Disconnect & forget device</button>
           </div>
           <p role="status" className="gs-jarvis-theme-notice">{gatewayStatus}</p>
         </div>
