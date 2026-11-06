@@ -81,6 +81,9 @@ export default function GreenSoilMarketPreview() {
   const fileRef = useRef<HTMLInputElement>(null)
   const playingAudio = useRef<HTMLAudioElement | null>(null)
   const audioUrlRef = useRef<string | null>(null)
+  const sessionRef = useRef(0)
+  const requestRef = useRef<AbortController | null>(null)
+  const speechRef = useRef<SpeechSynthesisUtterance | null>(null)
 
   useEffect(() => {
     let clearVoiceListener: (()=>void) | undefined
@@ -102,6 +105,7 @@ export default function GreenSoilMarketPreview() {
     return () => {
       clearVoiceListener?.()
       micRef.current?.stop()
+      requestRef.current?.abort()
       playingAudio.current?.pause()
       if (audioUrlRef.current) URL.revokeObjectURL(audioUrlRef.current)
       if ('speechSynthesis' in window) window.speechSynthesis.cancel()
@@ -127,20 +131,24 @@ export default function GreenSoilMarketPreview() {
       oscillator.onended = () => { void context.close() }
     } catch { /* Sound is optional and never blocks commands. */ }
   }
-  const playElevenLabs = async (text: string): Promise<boolean> => {
+  const playElevenLabs = async (text: string, session: number): Promise<boolean> => {
     if (!gatewayConnected || !validGatewayUrl(gatewayUrl) || !gatewayToken) {
       setAudioStatus('ElevenLabs not paired. Using device voice fallback.')
       return false
     }
     try {
+      if (session !== sessionRef.current) return true
+      setMode('processing')
       const response = await fetch(gatewayUrl.replace(/\/$/, '') + '/api/tts', {
         method: 'POST', credentials: 'omit', cache: 'no-store',
         headers: {Authorization: 'Bearer '+gatewayToken, 'Content-Type': 'application/json'},
         body: JSON.stringify({text:text.slice(0,200)}),
-        signal: AbortSignal.timeout(24000),
+        signal: AbortSignal.any([AbortSignal.timeout(24000), requestRef.current?.signal ?? new AbortController().signal]),
       })
       if (!response.ok) throw Error('ElevenLabs unavailable')
+      if (session !== sessionRef.current) return true
       const blob = await response.blob()
+      if (session !== sessionRef.current) return true
       if (!blob.type.startsWith('audio/') || blob.size > 384000 || !blob.size) throw Error('Invalid TTS audio')
       if (audioUrlRef.current) URL.revokeObjectURL(audioUrlRef.current)
       const url = URL.createObjectURL(blob)
@@ -149,30 +157,34 @@ export default function GreenSoilMarketPreview() {
       playingAudio.current?.pause()
       playingAudio.current = audio
       audio.onended = () => {
-        if (playingAudio.current === audio) { playingAudio.current = null; setMode('idle') }
+        if (playingAudio.current === audio) { playingAudio.current = null; if (session === sessionRef.current) setMode('idle') }
         URL.revokeObjectURL(url)
         if (audioUrlRef.current===url) audioUrlRef.current=null
       }
       audio.onerror = () => {
-        if (playingAudio.current === audio) { playingAudio.current=null; setMode('idle') }
+        if (playingAudio.current === audio) { playingAudio.current=null; if (session === sessionRef.current) setMode('idle') }
         URL.revokeObjectURL(url)
         if (audioUrlRef.current===url) audioUrlRef.current=null
       }
+      if (session !== sessionRef.current) { URL.revokeObjectURL(url); return true }
       await audio.play()
-      setAudioStatus('Playing optional ElevenLabs voice')
+      if (session !== sessionRef.current) { audio.pause(); return true }
+      setAudioStatus('Playing Brian ElevenLabs voice')
       setMode('speaking')
       return true
     } catch {
+      if (session !== sessionRef.current) return true
       setAudioStatus('ElevenLabs unavailable or quota exhausted. Using device voice fallback.')
       return false
     }
   }
-  const speak = (text: string) => {
+  const speak = (text: string, session: number) => {
+    if (session !== sessionRef.current) return
     if (!spokenReplies) { setMode('idle'); return }
-    if (voiceProvider === 'elevenlabs') { void playElevenLabs(text).then(ok => { if (!ok) speakDevice(text) }); return }
-    speakDevice(text)
+    if (voiceProvider === 'elevenlabs') { void playElevenLabs(text, session).then(ok => { if (!ok && session === sessionRef.current) speakDevice(text, session) }); return }
+    speakDevice(text, session)
   }
-  const speakDevice = (text: string) => {
+  const speakDevice = (text: string, session: number) => {
     if (!('speechSynthesis' in window)) { setMode('idle'); return }
     window.speechSynthesis.cancel()
     const say = new SpeechSynthesisUtterance(text)
@@ -181,20 +193,36 @@ export default function GreenSoilMarketPreview() {
     if (chosen) say.voice = chosen
     say.lang = chosen?.lang ?? 'en-IN'
     say.rate = voiceSpeed
-    say.onstart = () => { setMode('speaking'); setAudioStatus('Speaking via device browser voice') }
-    say.onend = () => setMode('idle')
-    say.onerror = () => { setMode('idle'); setAudioStatus('Voice output unavailable; answer remains visible as text') }
+    speechRef.current = say
+    say.onstart = () => { if (session === sessionRef.current) { setMode('speaking'); setAudioStatus('Speaking via device browser voice') } }
+    say.onend = () => { if (session === sessionRef.current) setMode('idle') }
+    say.onerror = () => { if (session === sessionRef.current) { setMode('idle'); setAudioStatus('Voice output unavailable; answer remains visible as text') } }
     window.speechSynthesis.speak(say)
   }
-  const transition = (reply: string) => {
+  const cancelCurrent = () => {
+    sessionRef.current += 1
+    requestRef.current?.abort()
+    requestRef.current = null
+    micRef.current?.stop()
+    micRef.current = null
+    playingAudio.current?.pause()
+    playingAudio.current = null
+    if (audioUrlRef.current) { URL.revokeObjectURL(audioUrlRef.current); audioUrlRef.current = null }
+    if ('speechSynthesis' in window) window.speechSynthesis.cancel()
+    timersRef.current.forEach(window.clearTimeout)
+    timersRef.current = []
+  }
+  const transition = (reply: string, session = sessionRef.current) => {
+    if (session !== sessionRef.current) return
     timersRef.current.forEach(window.clearTimeout)
     timersRef.current = []
     setMode('processing')
     sfx()
     timersRef.current.push(window.setTimeout(() => {
+      if (session !== sessionRef.current) return
       setMode('completed')
       setAnswer(reply)
-      timersRef.current.push(window.setTimeout(() => speak(reply), reducedMotion ? 50 : 450))
+      timersRef.current.push(window.setTimeout(() => speak(reply, session), reducedMotion ? 50 : 450))
     }, reducedMotion ? 50 : 620))
   }
   const validGatewayUrl = (value: string) => {
@@ -230,8 +258,10 @@ export default function GreenSoilMarketPreview() {
       setGatewayStatus('Pairing failed. Check URL, token, gateway availability and browser permissions.')
     }
   }
-  const askGemini = async (input: string) => {
-    if (!gatewayConnected || askingGemini || !validGatewayUrl(gatewayUrl)) return
+  const askGemini = async (input: string, session: number) => {
+    if (!gatewayConnected || !validGatewayUrl(gatewayUrl)) return
+    const controller = new AbortController()
+    requestRef.current = controller
     setAskingGemini(true); setMode('thinking')
     setAnswer('Private Gemini Flash-Lite reasoning...')
     try {
@@ -240,23 +270,25 @@ export default function GreenSoilMarketPreview() {
         headers: { Authorization: 'Bearer ' + gatewayToken, 'Content-Type': 'application/json' },
         body: JSON.stringify({message: input}),
         cache: 'no-store', credentials: 'omit',
-        signal: AbortSignal.timeout(35000),
+        signal: AbortSignal.any([AbortSignal.timeout(35000), controller.signal]),
       })
       const doc: unknown = await response.json()
       if (!response.ok || !doc || typeof doc !== 'object' ||
           typeof (doc as {answer?: unknown}).answer !== 'string') {
         throw Error('No safe AI reply')
       }
-      transition((doc as {answer:string}).answer.slice(0,1800))
+      if (session === sessionRef.current) transition((doc as {answer:string}).answer.slice(0,1800), session)
     } catch {
-      setMode('idle')
-      setAnswer('Gemini gateway unavailable, unauthorized, or daily quota reached. No live signals.')
-    } finally { setAskingGemini(false) }
+      if (session === sessionRef.current) { setMode('idle'); setAnswer('Gemini gateway unavailable, unauthorized, or daily quota reached. No live signals.') }
+    } finally { if (requestRef.current === controller) requestRef.current = null; if (session === sessionRef.current) setAskingGemini(false) }
   }
   const execute = (input: string) => {
     const q = input.trim()
     if (!q) return
     setCommand('')
+    cancelCurrent()
+    setAskingGemini(false)
+    const session = sessionRef.current
     const x = q.toLowerCase()
     if (/(trading|trade|market|chart|nifty|sensex).*(on|open|activate|show|start|pannu|kattu|thira)|(?:open|show|start|activate).*(trading|trade|market|chart|nifty|sensex)/i.test(x) ||
         /^\s*(nifty|sensex|trading mode)\s*$/i.test(q)) {
@@ -271,7 +303,7 @@ export default function GreenSoilMarketPreview() {
     } else if (/(target|entry|sl|stop.loss|buy|sell|reversal|premium|option)/i.test(x)) {
       transition('Verified NSE and options feeds unavailable. No target or new entry confirmation. NO TRADE.')
     } else {
-      if (gatewayConnected) void askGemini(q)
+      if (gatewayConnected) void askGemini(q, session)
       else transition('Gemini AI staging verified. Connect your private gateway in Settings for conversational AI. Local commands work offline.')
     }
   }
@@ -279,8 +311,8 @@ export default function GreenSoilMarketPreview() {
     const w = window as SpeechWindow
     const Ctor = w.SpeechRecognition || w.webkitSpeechRecognition
     if (!Ctor) { setAnswer('Mic recognition unavailable in this browser. Use text input.'); return }
-    micRef.current?.stop()
-    if ('speechSynthesis' in window) window.speechSynthesis.cancel()
+    cancelCurrent()
+    setAskingGemini(false)
     const recognition = new Ctor()
     micRef.current = recognition
     recognition.lang = 'en-IN'
@@ -290,6 +322,7 @@ export default function GreenSoilMarketPreview() {
       execute(phrase)
     }
     recognition.onerror = () => {
+      if (micRef.current !== recognition) return
       setMode('idle')
       setAnswer('Microphone unavailable or permission denied. Type your command.')
     }
@@ -301,14 +334,10 @@ export default function GreenSoilMarketPreview() {
     catch { setMode('idle'); setAnswer('Could not start microphone. Use text input.') }
   }
   const stop = () => {
-    micRef.current?.stop()
-    micRef.current = null
-    playingAudio.current?.pause()
-    playingAudio.current = null
-    if (audioUrlRef.current) {URL.revokeObjectURL(audioUrlRef.current);audioUrlRef.current=null}
-    timersRef.current.forEach(window.clearTimeout)
-    if ('speechSynthesis' in window) window.speechSynthesis.cancel()
+    cancelCurrent()
+    setAskingGemini(false)
     setMode('idle')
+    setAudioStatus('Voice stopped')
   }
   const importTheme = async (file: File | undefined) => {
     if (!file) return
@@ -366,7 +395,7 @@ export default function GreenSoilMarketPreview() {
       {settings && <section className="gs-jarvis-settings-sheet" aria-label="Core settings">
         <div className="gs-jarvis-sheet-header"><strong>Core Settings</strong><button type="button" onClick={()=>setSettings(false)}>✕</button></div>
         <label><input type="checkbox" checked={reducedMotion} onChange={e=>setReducedMotion(e.target.checked)}/> Reduce animation</label>
-        <label><input type="checkbox" checked={spokenReplies} onChange={e=>setSpokenReplies(e.target.checked)}/> Spoken responses (browser voice)</label>
+        <label><input type="checkbox" checked={spokenReplies} onChange={e=>setSpokenReplies(e.target.checked)}/> Spoken responses (selected voice)</label>
         <label><input type="checkbox" checked={soundEffects} onChange={e=>setSoundEffects(e.target.checked)}/> Sound effects (optional)</label>
         <div className="gs-jarvis-voice-settings">
           <strong>Voice engine</strong>
