@@ -164,3 +164,10 @@ Publish the latest compiled PAPER preview with Voice engine Settings, ElevenLabs
 - The storage design limits casual raw storage exposure but is not protection from malicious same-origin scripts, stolen unlocked browser sessions or a compromised phone. Clearing browser site data, incognito or changed phone/browser requires pairing again. Disconnect & forget clears persistent and tab pairing.
 - Auto-pairing validates the fixed separate Railway staging gateway and the disabled-trading flag before reporting connected; no production services altered. Existing free-tier quotas preserved.
 - TypeScript and command routing CI PASS; real device persistence test still required.
+
+## V6.9 — JARVIS welcome and animated emerald reactor
+
+- Device-local time-aware Good morning/afternoon/evening Boss welcome message, with a manually activated Hear welcome button (not an automatic paid voice API call).
+- Updated visual CSS for animated green plasma core with visible inner motion and energy halo even while idle; Resume AI core animation button appears if previously saved Reduce animation is enabled.
+- User requested retaining gateway token in chat, but credentials must never be written into GitHub, project documents or logs. Keep private gateway pairing in encrypted device browser storage and rotate any token exposed in chat.
+- Brian ElevenLabs and saved device pairing untouched. TypeScript frontend and multilingual intent CI PASS; on-phone animation QA pending.
