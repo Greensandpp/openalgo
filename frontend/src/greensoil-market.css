@@ -553,3 +553,32 @@ color:#eafff0;padding:10px 11px;font-size:12px}
  .gs-chart-full-header button{font-size:11px;padding:8px}
  .gs-chart-actionbar span{font-size:9px}
 }
+
+
+/* V6 voice lab: expressive six-state plasma transitions and safe provider controls. */
+.gs-jarvis-voice-settings{border-top:1px solid #36ab6959;padding-top:12px;display:grid;gap:9px}
+.gs-jarvis-voice-settings strong{color:#d8ffe7;font-size:13px}
+.gs-jarvis-voice-settings label{color:#c9e8d3;font-size:11px}
+.gs-jarvis-voice-settings select{color:#d8ffe5;background:#061b11;border:1px solid #52b77977;border-radius:9px;padding:10px;font-size:12px;width:100%;min-width:0}
+.gs-jarvis-voice-settings input[type=range]{width:100%;accent-color:#00f36f}
+.gs-jarvis-voice-settings p{font-size:11px;color:#a4c5af;margin:0;line-height:1.5}
+.gs-jarvis-core .gs-reactor{transition:filter .45s ease,transform .45s ease}
+.gs-jarvis-core .gs-reactor-idle .gs-reactor-halo{filter:brightness(.86)}
+.gs-jarvis-core .gs-reactor-listening .gs-reactor-halo{animation:gs-voice-listening 1.1s ease-in-out infinite}
+.gs-jarvis-core .gs-reactor-thinking .gs-reactor-trace-a,
+.gs-jarvis-core .gs-reactor-thinking .gs-reactor-trace-b{animation-duration:1.8s}
+.gs-jarvis-core .gs-reactor-processing .gs-reactor-orbit-a,
+.gs-jarvis-core .gs-reactor-processing .gs-reactor-orbit-b{animation-duration:1.7s}
+.gs-jarvis-core .gs-reactor-completed .gs-reactor-flash{animation:gs-voice-completed .85s ease-out 1}
+.gs-jarvis-core .gs-reactor-speaking .gs-reactor-halo{animation:gs-voice-speaking .43s ease-in-out infinite alternate}
+.gs-jarvis-core .gs-reactor-listening .gs-reactor-live{box-shadow:0 0 22px #27ffb9}
+.gs-jarvis-core .gs-reactor-thinking .gs-reactor-live{box-shadow:0 0 20px #d6af63}
+.gs-jarvis-core .gs-reactor-speaking .gs-reactor-live{box-shadow:0 0 20px #38f5bc}
+@keyframes gs-voice-listening{0%,100%{opacity:.52;transform:scale(.95)}50%{opacity:1;transform:scale(1.14)}}
+@keyframes gs-voice-speaking{from{opacity:.57;filter:brightness(.9);transform:scale(.97)}
+ to{opacity:1;filter:brightness(1.35);transform:scale(1.11)}}
+@keyframes gs-voice-completed{0%{opacity:0;transform:scale(.4)}35%{opacity:1;transform:scale(1.22)}
+ 100%{opacity:0;transform:scale(1.65)}}
+@media(prefers-reduced-motion:reduce){
+ .gs-jarvis-core .gs-reactor-halo,.gs-jarvis-core .gs-reactor-flash{animation:none!important}
+}
