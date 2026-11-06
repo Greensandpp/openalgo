@@ -605,3 +605,6 @@ color:#eafff0;padding:10px 11px;font-size:12px}
 @media(prefers-reduced-motion:reduce){
 .gs-jarvis-core .gs-reactor-sphere,.gs-jarvis-core .gs-reactor-halo{animation:none!important}
 }
+
+/* V7.2: honest, always-visible Brian/phone voice diagnostic. */
+.gs-jarvis-audio-status{z-index:2;position:relative;font-size:11px;color:#a9e8c2;text-align:center;max-width:min(90vw,510px);line-height:1.4;padding:2px 7px;min-height:16px}
