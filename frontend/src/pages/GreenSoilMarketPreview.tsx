@@ -5,6 +5,7 @@
 import { useEffect, useRef, useState, type CSSProperties } from 'react'
 import GreenSoilLab from './GreenSoilLab'
 import { ReactiveCore, type CoreMode } from './GreenSoilReactiveCore'
+import { parseJarvisIntent } from '../lib/greensoilJarvisIntent'
 
 type Index = 'NIFTY' | 'SENSEX'
 type Preset = {
@@ -342,22 +343,20 @@ export default function GreenSoilMarketPreview() {
     cancelCurrent()
     setAskingGemini(false)
     const session = sessionRef.current
-    const x = q.toLowerCase()
-    if (/(trading|trade|market|chart|nifty|sensex).*(on|open|activate|show|start|pannu|kattu|thira)|(?:open|show|start|activate).*(trading|trade|market|chart|nifty|sensex)/i.test(x) ||
-        /^\s*(nifty|sensex|trading mode)\s*$/i.test(q)) {
-      const target: Index = /sensex/i.test(x) ? 'SENSEX' : 'NIFTY'
-      setTrading(true); setSymbol(target)
-      transition(`${target} PAPER chart opened. Prices are synthetic; live feed not connected.`)
-    } else if (/(back|home|close|exit|stop).*?(trading|trade|chart|mode)|(?:jarvis|greensoil).*?(home|normal)/i.test(x)) {
+    const intent = parseJarvisIntent(q, symbol)
+    if (intent.kind === 'open_chart') {
+      setTrading(true); setSymbol(intent.symbol)
+      transition(`${intent.symbol} PAPER chart opened. Candles are synthetic; live market feed not connected.`, session)
+    } else if (intent.kind === 'close_chart') {
       setTrading(false)
-      transition('JARVIS core mode activated.')
-    } else if (/(news|headlines|current market|today.?s market)/i.test(x)) {
-      transition('Verified live news feed not connected. Current headlines cannot be confirmed.')
-    } else if (/(target|entry|sl|stop.loss|buy|sell|reversal|premium|option)/i.test(x)) {
-      transition('Verified NSE and options feeds unavailable. No target or new entry confirmation. NO TRADE.')
+      transition('JARVIS core mode activated.', session)
+    } else if (intent.kind === 'unavailable_news') {
+      transition('Verified live news feed not connected. Current headlines cannot be confirmed.', session)
+    } else if (intent.kind === 'unavailable_market') {
+      transition('Verified live NSE and options data unavailable. No target or entry confirmation. NO TRADE.', session)
     } else {
       if (gatewayConnected) void askGemini(q, session)
-      else transition('Gemini AI staging verified. Connect your private gateway in Settings for conversational AI. Local commands work offline.')
+      else transition('Gemini AI is available after private gateway pairing. Offline chart commands work now.', session)
     }
   }
   const startMic = () => {
