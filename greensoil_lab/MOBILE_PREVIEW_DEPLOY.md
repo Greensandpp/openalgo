@@ -121,3 +121,11 @@ synthetic-data watermark improve phone readability. Live feeds remain absent.
 - Gateway supports optional disabled-by-default ElevenLabs authenticated TTS with tight per-process daily caps, but no ElevenLabs API key is configured.
 - Public website cannot claim ElevenLabs connected, and always falls back to device browser voice.
 - No paid billing upgrades or production broker changes.
+
+## V6.3 — ElevenLabs voice readiness / mobile bugfix
+
+- Optional ElevenLabs free-plan-compatible Flash v2.5 TTS path stays disabled without a dedicated ElevenLabs API key and selected free-tier-accessible voice ID.
+- Browser device voice remains the default fallback. Voice provider/voice choice/speed remain editable in Settings.
+- Fixed trailing-slash removal in optional audio endpoint URL; endpoint now resolves to the private Railway gateway correctly when pairing is enabled.
+- User-facing provider label no longer suggests the voice is already live; no actual ElevenLabs credits used or API requests made.
+- Existing read-only PAPER demo, mobile fullscreen chart, no broker orders, separate Railway production and AIRA remain unchanged.
