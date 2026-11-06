@@ -79,6 +79,8 @@ export default function GreenSoilMarketPreview() {
   const micRef = useRef<VoiceRecognizer | null>(null)
   const timersRef = useRef<number[]>([])
   const fileRef = useRef<HTMLInputElement>(null)
+  const playingAudio = useRef<HTMLAudioElement | null>(null)
+  const audioUrlRef = useRef<string | null>(null)
 
   useEffect(() => {
     let clearVoiceListener: (()=>void) | undefined
@@ -100,6 +102,8 @@ export default function GreenSoilMarketPreview() {
     return () => {
       clearVoiceListener?.()
       micRef.current?.stop()
+      playingAudio.current?.pause()
+      if (audioUrlRef.current) URL.revokeObjectURL(audioUrlRef.current)
       if ('speechSynthesis' in window) window.speechSynthesis.cancel()
       timersRef.current.forEach(window.clearTimeout)
     }
@@ -123,9 +127,53 @@ export default function GreenSoilMarketPreview() {
       oscillator.onended = () => { void context.close() }
     } catch { /* Sound is optional and never blocks commands. */ }
   }
+  const playElevenLabs = async (text: string): Promise<boolean> => {
+    if (!gatewayConnected || !validGatewayUrl(gatewayUrl) || !gatewayToken) {
+      setAudioStatus('ElevenLabs not paired. Using device voice fallback.')
+      return false
+    }
+    try {
+      const response = await fetch(gatewayUrl.replace(/\\/$/, '') + '/api/tts', {
+        method: 'POST', credentials: 'omit', cache: 'no-store',
+        headers: {Authorization: 'Bearer '+gatewayToken, 'Content-Type': 'application/json'},
+        body: JSON.stringify({text:text.slice(0,200)}),
+        signal: AbortSignal.timeout(24000),
+      })
+      if (!response.ok) throw Error('ElevenLabs unavailable')
+      const blob = await response.blob()
+      if (!blob.type.startsWith('audio/') || blob.size > 384000 || !blob.size) throw Error('Invalid TTS audio')
+      if (audioUrlRef.current) URL.revokeObjectURL(audioUrlRef.current)
+      const url = URL.createObjectURL(blob)
+      audioUrlRef.current = url
+      const audio = new Audio(url)
+      playingAudio.current?.pause()
+      playingAudio.current = audio
+      audio.onended = () => {
+        if (playingAudio.current === audio) { playingAudio.current = null; setMode('idle') }
+        URL.revokeObjectURL(url)
+        if (audioUrlRef.current===url) audioUrlRef.current=null
+      }
+      audio.onerror = () => {
+        if (playingAudio.current === audio) { playingAudio.current=null; setMode('idle') }
+        URL.revokeObjectURL(url)
+        if (audioUrlRef.current===url) audioUrlRef.current=null
+      }
+      await audio.play()
+      setAudioStatus('Playing optional ElevenLabs voice')
+      setMode('speaking')
+      return true
+    } catch {
+      setAudioStatus('ElevenLabs unavailable or quota exhausted. Using device voice fallback.')
+      return false
+    }
+  }
   const speak = (text: string) => {
-    if (!spokenReplies || !('speechSynthesis' in window)) { setMode('idle'); return }
-    if (voiceProvider === 'elevenlabs') setAudioStatus('ElevenLabs not connected; using free browser voice fallback.')
+    if (!spokenReplies) { setMode('idle'); return }
+    if (voiceProvider === 'elevenlabs') { void playElevenLabs(text).then(ok => { if (!ok) speakDevice(text) }); return }
+    speakDevice(text)
+  }
+  const speakDevice = (text: string) => {
+    if (!('speechSynthesis' in window)) { setMode('idle'); return }
     window.speechSynthesis.cancel()
     const say = new SpeechSynthesisUtterance(text)
     const voices = window.speechSynthesis.getVoices()
@@ -255,6 +303,9 @@ export default function GreenSoilMarketPreview() {
   const stop = () => {
     micRef.current?.stop()
     micRef.current = null
+    playingAudio.current?.pause()
+    playingAudio.current = null
+    if (audioUrlRef.current) {URL.revokeObjectURL(audioUrlRef.current);audioUrlRef.current=null}
     timersRef.current.forEach(window.clearTimeout)
     if ('speechSynthesis' in window) window.speechSynthesis.cancel()
     setMode('idle')
