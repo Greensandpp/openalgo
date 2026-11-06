@@ -106,3 +106,10 @@ synthetic-data watermark improve phone readability. Live feeds remain absent.
 - Authenticated config handshake and chat are limited by strict exact origin, server-side bearer checks, and conservative per-process rate/daily quotas.
 - Market data and news are still unavailable; charts remain synthetic and trade execution disabled.
 - Successful isolated API smoke probe does not prove browser pairing works on every phone; end-to-end mobile QA pending.
+
+## V6.2 — Vertical chart maximization
+
+- Maximize button is physically below NIFTY/SENSEX chart, with an accessible Minimize control and Close button.
+- The chart fills the browser visual viewport vertically on Android/mobile. Browser OS navigation and Chrome toolbar cannot be hidden by CSS; this is a full-viewport overlay, not forced native browser fullscreen.
+- Chart lifecycle reinitializes when expanded/collapsed to measure new dimensions; Escape key also exits.
+- Synthetic PAPER chart remains synthetic; no production, live market feed, broker or Railway changes.
