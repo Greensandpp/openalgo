@@ -7,6 +7,7 @@ import GreenSoilLab from './GreenSoilLab'
 import { ReactiveCore, type CoreMode } from './GreenSoilReactiveCore'
 import { parseJarvisIntent } from '../lib/greensoilJarvisIntent'
 import { jarvisGreeting } from '../lib/greensoilGreeting'
+import { cachedBrianClip, saveBrianClip } from '../lib/greensoilBrianCache'
 import { forgetDevicePairing, restoreDevicePairing, saveDevicePairing } from '../lib/greensoilSecurePairing'
 
 type Index = 'NIFTY' | 'SENSEX'
@@ -217,20 +218,25 @@ export default function GreenSoilMarketPreview() {
     } catch { /* Sound is optional and never blocks commands. */ }
   }
   const playElevenLabs = async (text: string, session: number): Promise<boolean> => {
-    if (!gatewayConnected || !validGatewayUrl(gatewayUrl) || !gatewayToken) {
-      setAudioStatus('Brian unavailable: private Gemini gateway is not paired. Open Settings to connect.')
-      return false
-    }
     try {
       if (session !== sessionRef.current) return true
       setMode('processing')
-      const response = await fetch(gatewayUrl.replace(/\/$/, '') + '/api/tts', {
+      // Cache only generic, non-personal phrases. A previously generated Brian
+      // greeting plays again offline even after the daily quota runs out.
+      const saved = await cachedBrianClip(text).catch(()=>null)
+      if (session !== sessionRef.current) return true
+      if (!saved && (!gatewayConnected || !validGatewayUrl(gatewayUrl) || !gatewayToken)) {
+        setAudioStatus('Brian unavailable: gateway not paired. Cached Brian greetings remain available offline.')
+        setMode('idle')
+        return false
+      }
+      const response = saved ? null : await fetch(gatewayUrl.replace(/\/$/, '') + '/api/tts', {
         method: 'POST', credentials: 'omit', cache: 'no-store',
         headers: {Authorization: 'Bearer '+gatewayToken, 'Content-Type': 'application/json'},
         body: JSON.stringify({text:text.slice(0,200)}),
         signal: AbortSignal.any([AbortSignal.timeout(24000), requestRef.current?.signal ?? new AbortController().signal]),
       })
-      if (!response.ok) {
+      if (response && !response.ok) {
         let reason = ''
         try {
           const detail:unknown = await response.json()
@@ -245,7 +251,8 @@ export default function GreenSoilMarketPreview() {
         throw Error('voice_unavailable')
       }
       if (session !== sessionRef.current) return true
-      const blob = await response.blob()
+      const blob = saved ?? await response!.blob()
+      if (!saved) void saveBrianClip(text,blob).catch(()=>undefined)
       if (session !== sessionRef.current) return true
       if (!blob.type.startsWith('audio/') || blob.size > 384000 || !blob.size) throw Error('Invalid TTS audio')
       if (audioUrlRef.current) URL.revokeObjectURL(audioUrlRef.current)
@@ -267,7 +274,7 @@ export default function GreenSoilMarketPreview() {
       if (session !== sessionRef.current) { URL.revokeObjectURL(url); return true }
       await audio.play()
       if (session !== sessionRef.current) { audio.pause(); return true }
-      setAudioStatus('Playing Brian ElevenLabs voice')
+      setAudioStatus(saved ? 'Playing cached Brian ElevenLabs audio (no API credits)' : 'Playing Brian ElevenLabs voice')
       setMode('speaking')
       return true
     } catch (error) {
@@ -288,14 +295,12 @@ export default function GreenSoilMarketPreview() {
     if (session !== sessionRef.current) return
     if (!spokenReplies) { setMode('idle'); return }
     if (voiceProvider === 'elevenlabs') {
-      void playElevenLabs(text, session).then(ok => {
-        if (!ok && session === sessionRef.current) speakDevice(text, session, true)
-      })
+      void playElevenLabs(text, session)
       return
     }
     speakDevice(text, session)
   }
-  const speakDevice = (text: string, session: number, fallback = false) => {
+  const speakDevice = (text: string, session: number) => {
     if (!('speechSynthesis' in window)) { setMode('idle'); return }
     window.speechSynthesis.cancel()
     const say = new SpeechSynthesisUtterance(text)
@@ -305,7 +310,7 @@ export default function GreenSoilMarketPreview() {
     say.lang = chosen?.lang ?? 'en-IN'
     say.rate = voiceSpeed
     speechRef.current = say
-    say.onstart = () => { if (session === sessionRef.current) { setMode('speaking'); setAudioStatus(fallback ? 'Temporary device voice (Brian still preferred)' : 'Speaking via device browser voice') } }
+    say.onstart = () => { if (session === sessionRef.current) { setMode('speaking'); setAudioStatus('Speaking via device browser voice (manually selected)') } }
     say.onend = () => { if (session === sessionRef.current) setMode('idle') }
     say.onerror = () => { if (session === sessionRef.current) { setMode('idle'); setAudioStatus('Voice output unavailable; answer remains visible as text') } }
     window.speechSynthesis.speak(say)
@@ -533,11 +538,11 @@ export default function GreenSoilMarketPreview() {
             const next=e.target.value as 'browser'|'elevenlabs'
             setVoiceProvider(next)
             setAudioStatus(next==='elevenlabs' ?
-              'Brian selected permanently. On provider failure, phone voice is used for that reply only.' :
+              'Brian selected. Cached Brian greetings replay offline. New replies need available provider quota; no automatic lady voice.' :
               'Browser voice selected. No API credits used.')
           }}>
             <option value="browser">Device voice — free alternative</option>
-            <option value="elevenlabs">Brian — ElevenLabs (preferred, phone backup)</option>
+            <option value="elevenlabs">Brian — ElevenLabs (preferred, no auto voice switching)</option>
           </select>
           <label htmlFor="gs-voice-choice">Device voice</label>
           <select id="gs-voice-choice" value={voicePreference} onChange={e=>setVoicePreference(e.target.value)}>
