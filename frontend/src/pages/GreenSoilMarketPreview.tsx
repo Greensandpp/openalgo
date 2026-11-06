@@ -6,6 +6,7 @@ import { useEffect, useRef, useState, type CSSProperties } from 'react'
 import GreenSoilLab from './GreenSoilLab'
 import { ReactiveCore, type CoreMode } from './GreenSoilReactiveCore'
 import { parseJarvisIntent } from '../lib/greensoilJarvisIntent'
+import { jarvisGreeting } from '../lib/greensoilGreeting'
 import { forgetDevicePairing, restoreDevicePairing, saveDevicePairing } from '../lib/greensoilSecurePairing'
 
 type Index = 'NIFTY' | 'SENSEX'
@@ -59,11 +60,12 @@ function hue(hex: string): number {
 
 export default function GreenSoilMarketPreview() {
   const [reducedMotion, setReducedMotion] = useState(false)
+  const [greeting, setGreeting] = useState('Welcome back, Boss')
   const [mode, setMode] = useState<CoreMode>('idle')
   const [trading, setTrading] = useState(false)
   const [symbol, setSymbol] = useState<Index>('NIFTY')
   const [command, setCommand] = useState('')
-  const [answer, setAnswer] = useState('Ready. Say “Trading mode activate” to open the PAPER chart lab.')
+  const [answer, setAnswer] = useState('JARVIS initializing…')
   const [settings, setSettings] = useState(false)
   const [soundEffects, setSoundEffects] = useState(false)
   const [spokenReplies, setSpokenReplies] = useState(true)
@@ -98,6 +100,9 @@ export default function GreenSoilMarketPreview() {
     let clearVoiceListener: (()=>void) | undefined
     const w = window as SpeechWindow
     setMicSupported(Boolean(w.SpeechRecognition || w.webkitSpeechRecognition))
+    const welcome = jarvisGreeting(new Date().getHours())
+    setGreeting(welcome)
+    setAnswer(welcome)
     if ('speechSynthesis' in window) {
       const listVoices = () => {
         const voices = window.speechSynthesis.getVoices()
@@ -466,9 +471,11 @@ export default function GreenSoilMarketPreview() {
       </header>
       <main className="gs-jarvis-main">
         <section className={`gs-jarvis-hero ${trading ? 'gs-jarvis-hero-compact' : ''}`} aria-label="JARVIS AI reactor">
-          <div className="gs-jarvis-kicker">{trading ? 'TRADING MODE • SYNTHETIC PAPER' : 'JARVIS CORE • READY'}</div>
+          <div className="gs-jarvis-kicker">{trading ? 'TRADING MODE • SYNTHETIC PAPER' : 'JARVIS CORE • ONLINE'}</div>
+          {!trading && <div className="gs-jarvis-greeting" aria-label="JARVIS welcome message">{greeting}</div>}
           <div className="gs-jarvis-core"><ReactiveCore mode={mode} reducedMotion={reducedMotion} onTouch={() => { setMode('idle'); setAnswer('Energy pulse activated. Tap microphone to speak.'); }} particleCount={preset.particleCount} /></div>
           <div className="gs-jarvis-status">{answer}</div>
+          {!trading && <button type="button" className="gs-jarvis-welcome" onClick={()=>{cancelCurrent();speak(greeting,sessionRef.current)}} aria-label="Play JARVIS welcome greeting">◉ Hear welcome</button>
           {!trading && <button type="button" className="gs-jarvis-activate" onClick={() => execute('trading mode activate')}>◈ Activate Trading Mode</button>}
           {trading && <div className="gs-jarvis-trade-controls">
             <button type="button" aria-pressed={symbol==='NIFTY'} onClick={()=>execute('open nifty chart')}>NIFTY</button>
@@ -483,7 +490,7 @@ export default function GreenSoilMarketPreview() {
       </main>
       {settings && <section className="gs-jarvis-settings-sheet" aria-label="Core settings">
         <div className="gs-jarvis-sheet-header"><strong>Core Settings</strong><button type="button" onClick={()=>setSettings(false)}>✕</button></div>
-        <label><input type="checkbox" checked={reducedMotion} onChange={e=>setReducedMotion(e.target.checked)}/> Reduce animation</label>
+        <label><input type="checkbox" checked={reducedMotion} onChange={e=>setReducedMotion(e.target.checked)}/> Reduce animation {reducedMotion ? '(ON — static core)' : '(OFF — animated core)'}</label>
         <label><input type="checkbox" checked={spokenReplies} onChange={e=>setSpokenReplies(e.target.checked)}/> Spoken responses (selected voice)</label>
         <label><input type="checkbox" checked={soundEffects} onChange={e=>setSoundEffects(e.target.checked)}/> Sound effects (optional)</label>
         <div className="gs-jarvis-voice-settings">
