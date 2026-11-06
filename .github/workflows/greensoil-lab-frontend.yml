@@ -25,3 +25,5 @@ jobs:
         run: npx tsc -b --pretty false
       - name: Test 8:30 report JSON validation
         run: npx vitest run src/lib/greensoilBaseline.test.ts
+      - name: Test multilingual JARVIS voice command routing
+        run: npx vitest run src/lib/greensoilJarvisIntent.test.ts
