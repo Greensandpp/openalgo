@@ -156,3 +156,11 @@ Publish the latest compiled PAPER preview with Voice engine Settings, ElevenLabs
 - High-stakes live next-target/new-entry/option premium questions are explicitly blocked with NO TRADE when trusted NSE/news feeds are missing; unknown general conversation goes only to separately paired Gemini.
 - Automated 28-case intent tests plus TypeScript gate PASS. Actual on-device mic transcription QA remains pending.
 - Brian ElevenLabs configuration, secure gateway pairing, all saved settings and production trading services untouched.
+
+## V6.8 — encrypted remember-this-device pairing
+
+- Brian/ElevenLabs is the new voice provider default for first-time visitors; existing saved preferences continue to win.
+- On explicit saved-device opt-in (checked by default on a personal phone), the separate Railway gateway access token is encrypted with AES-GCM and a nonexportable browser key persisted in IndexedDB, and revalidated automatically on future visits. Gemini and ElevenLabs provider API keys never leave Railway.
+- The storage design limits casual raw storage exposure but is not protection from malicious same-origin scripts, stolen unlocked browser sessions or a compromised phone. Clearing browser site data, incognito or changed phone/browser requires pairing again. Disconnect & forget clears persistent and tab pairing.
+- Auto-pairing validates the fixed separate Railway staging gateway and the disabled-trading flag before reporting connected; no production services altered. Existing free-tier quotas preserved.
+- TypeScript and command routing CI PASS; real device persistence test still required.
