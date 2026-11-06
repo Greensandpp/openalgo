@@ -41,6 +41,8 @@ class GeminiGatewayTests(unittest.TestCase):
             gateway._REQUEST_TIMES.clear()
             gateway._AUTH_FAILURES.clear()
             gateway._DAILY_COUNTS.update(day=None, count=0)
+        with gateway._TTS_LOCK:
+            gateway._TTS_DAILY.update(day=None, count=0, characters=0)
 
     def tearDown(self):
         self.env_patch.stop()
@@ -113,6 +115,50 @@ class GeminiGatewayTests(unittest.TestCase):
                 headers={"Origin": ORIGIN, "Authorization": "Bearer incorrect"},
                 json={"message": "Hello"})
         self.assertEqual(401, response.status_code)
+
+    def test_elevenlabs_is_disabled_by_default(self):
+        with patch("urllib.request.urlopen", side_effect=AssertionError("unexpected ElevenLabs call")):
+            response = self.client.post("/api/tts", headers=HEADERS, json={"text": "Hello"})
+        self.assertEqual(503, response.status_code)
+        self.assertEqual("elevenlabs_not_configured", response.json["error"])
+
+    def test_elevenlabs_requires_auth_and_strict_length(self):
+        with patch.dict(os.environ, {
+            "ENABLE_ELEVENLABS_TTS": "true",
+            "ELEVENLABS_API_KEY": "test-secret",
+            "ELEVENLABS_VOICE_ID": "test_voice",
+        }):
+            with patch("urllib.request.urlopen", side_effect=AssertionError("must not request")):
+                self.assertEqual(403, self.client.post("/api/tts",
+                    headers={"Origin": "https://other.example"}, json={"text": "Hello"}).status_code)
+                self.assertEqual(401, self.client.post("/api/tts",
+                    headers={"Origin": ORIGIN}, json={"text": "Hello"}).status_code)
+                self.assertEqual(400, self.client.post("/api/tts",
+                    headers=HEADERS, json={"text": "a"*201}).status_code)
+
+    def test_elevenlabs_daily_limit_and_audio_response(self):
+        class FakeAudio:
+            headers = {"Content-Type": "audio/mpeg"}
+            def __enter__(self):
+                return self
+            def __exit__(self, *args):
+                return False
+            def read(self, *args):
+                return b"dummy-test-mp3"
+
+        with patch.dict(os.environ, {
+            "ENABLE_ELEVENLABS_TTS": "true",
+            "ELEVENLABS_API_KEY": "test-secret",
+            "ELEVENLABS_VOICE_ID": "test_voice",
+        }):
+            with patch("urllib.request.urlopen", return_value=FakeAudio()) as send:
+                for _ in range(4):
+                    response = self.client.post("/api/tts", headers=HEADERS, json={"text": "Hello"})
+                    self.assertEqual(200, response.status_code)
+                    self.assertEqual("audio/mpeg", response.mimetype)
+                response = self.client.post("/api/tts", headers=HEADERS, json={"text": "Hello"})
+                self.assertEqual(429, response.status_code)
+                self.assertEqual(4, send.call_count)
 
     def test_invalid_payload_and_write_denial(self):
         r = self.client.post("/api/chat", headers=HEADERS, json={"message": ""})
