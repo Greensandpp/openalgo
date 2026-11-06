@@ -28,7 +28,7 @@ export function parseJarvisIntent(utterance: string, currentSymbol:'NIFTY'|'SENS
   const nifty = /(nifty|நிஃப்டி|நிப்டி|நிப்டீ|nifti)/u.test(x)
   const target = sensex ? 'SENSEX' : nifty ? 'NIFTY' : currentSymbol
   const chartTerm = /(trading|trade|market|chart|dashboard|tradingview|trading\s+view|graph|trading\s+mode|trade\s+mode|சார்ட்|டிரேடிங்|சந்தை)/u.test(x)
-  const openAction = /(open|show|activate|start|launch|display|switch|change|take\s+me|go\s+to|kattu|kaatu|kat[u]?|pannu|thira|thera|podu|venum|வேணும்|காட்டு|திற|போடு|தொடங்கு|ஓபன்)/u.test(x)
+  const openAction = /(open|show|activate|start|launch|display|switch|change|take\s+me|go\s+to|kattu|kaattu|kaatu|kat[u]?|pannu|thira|thera|podu|venum|வேணும்|காட்டு|திற|போடு|தொடங்கு|ஓபன்)/u.test(x)
   // Bare symbol and "trading mode" are intentional navigation commands.
   if (openAction && (chartTerm || sensex || nifty)) return {kind:'open_chart',symbol:target}
   if (/^(?:jarvis\s+)?(?:nifty|sensex|நிஃப்டி|சென்செக்ஸ்|trading\s+mode|trade\s+mode)$/u.test(x))
