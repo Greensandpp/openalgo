@@ -186,3 +186,11 @@ Publish the latest compiled PAPER preview with Voice engine Settings, ElevenLabs
 - Add explicit user-gesture Test phone voice button on the home screen so Android browser speech output can be diagnosed without making ElevenLabs calls.
 - Phone voice fallback is labeled honestly in Settings, does not permanently switch the preferred voice selection, and preserves existing Railway free-tier limits.
 - Frontend TypeScript and multilingual routing checks passed; live Android playback confirmation remains necessary.
+
+## V7.2 — separate Brian and phone voice diagnostics
+
+- Clarifies phone voice test is Android browser's selected voice, not ElevenLabs Brian.
+- Added Test Brian voice button that calls secure staging ElevenLabs without phone fallback, and a visible core-level voice status display.
+- Distinguishes Brian gateway unpaired, quota 429, provider rejection, configuration and network/audio errors without exposing API credentials.
+- Normal spoken replies still prefer Brian and temporarily use browser voice when Brian fails, as requested for uninterrupted audio; successful Brian voice remains chosen.
+- TypeScript and routing tests PASS. Actual Android browser test pending.
