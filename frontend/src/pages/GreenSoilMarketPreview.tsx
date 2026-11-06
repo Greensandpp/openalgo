@@ -62,6 +62,11 @@ export default function GreenSoilMarketPreview() {
   const [settings, setSettings] = useState(false)
   const [soundEffects, setSoundEffects] = useState(false)
   const [spokenReplies, setSpokenReplies] = useState(true)
+  const [voicePreference, setVoicePreference] = useState('auto')
+  const [voiceOptions, setVoiceOptions] = useState<Array<{id:string;label:string}>>([])
+  const [voiceSpeed, setVoiceSpeed] = useState(.96)
+  const [voiceProvider, setVoiceProvider] = useState<'browser'|'elevenlabs'>('browser')
+  const [audioStatus, setAudioStatus] = useState('Browser voice ready. ElevenLabs connection not configured.')
   const [micSupported, setMicSupported] = useState(false)
   const [preset, setPreset] = useState<Preset>(DEFAULT_PRESET)
   const [htmlPreview, setHtmlPreview] = useState<string | null>(null)
@@ -78,6 +83,15 @@ export default function GreenSoilMarketPreview() {
   useEffect(() => {
     const w = window as SpeechWindow
     setMicSupported(Boolean(w.SpeechRecognition || w.webkitSpeechRecognition))
+    if ('speechSynthesis' in window) {
+      const listVoices = () => {
+        const voices = window.speechSynthesis.getVoices()
+        setVoiceOptions(voices.map((v,i)=>({id:String(i),label:v.name+' · '+v.lang})))
+      }
+      listVoices()
+      window.speechSynthesis.addEventListener('voiceschanged',listVoices)
+      // Return cleanup handled by the single effect return below.
+    }
     try {
       const raw = window.localStorage.getItem(LOCAL_KEY)
       if (raw) setPreset(validatePreset(JSON.parse(raw) as unknown))
@@ -109,13 +123,17 @@ export default function GreenSoilMarketPreview() {
   }
   const speak = (text: string) => {
     if (!spokenReplies || !('speechSynthesis' in window)) { setMode('idle'); return }
+    if (voiceProvider === 'elevenlabs') setAudioStatus('ElevenLabs not connected; using free browser voice fallback.')
     window.speechSynthesis.cancel()
     const say = new SpeechSynthesisUtterance(text)
-    say.lang = 'en-IN'
-    say.rate = .96
-    say.onstart = () => setMode('speaking')
+    const voices = window.speechSynthesis.getVoices()
+    const chosen = voicePreference === 'auto' ? null : voices[Number(voicePreference)]
+    if (chosen) say.voice = chosen
+    say.lang = chosen?.lang ?? 'en-IN'
+    say.rate = voiceSpeed
+    say.onstart = () => { setMode('speaking'); setAudioStatus('Speaking via device browser voice') }
     say.onend = () => setMode('idle')
-    say.onerror = () => setMode('idle')
+    say.onerror = () => { setMode('idle'); setAudioStatus('Voice output unavailable; answer remains visible as text') }
     window.speechSynthesis.speak(say)
   }
   const transition = (reply: string) => {
@@ -297,6 +315,29 @@ export default function GreenSoilMarketPreview() {
         <label><input type="checkbox" checked={reducedMotion} onChange={e=>setReducedMotion(e.target.checked)}/> Reduce animation</label>
         <label><input type="checkbox" checked={spokenReplies} onChange={e=>setSpokenReplies(e.target.checked)}/> Spoken responses (browser voice)</label>
         <label><input type="checkbox" checked={soundEffects} onChange={e=>setSoundEffects(e.target.checked)}/> Sound effects (optional)</label>
+        <div className="gs-jarvis-voice-settings">
+          <strong>Voice engine</strong>
+          <label htmlFor="gs-voice-provider">Provider</label>
+          <select id="gs-voice-provider" value={voiceProvider} onChange={e=>{
+            const next=e.target.value as 'browser'|'elevenlabs'
+            setVoiceProvider(next)
+            setAudioStatus(next==='elevenlabs' ?
+              'ElevenLabs requires separate secure staging API integration. Browser voice remains fallback.' :
+              'Browser voice selected. No API credits used.')
+          }}>
+            <option value="browser">Device voice — free / available now</option>
+            <option value="elevenlabs">ElevenLabs — optional / not connected</option>
+          </select>
+          <label htmlFor="gs-voice-choice">Device voice</label>
+          <select id="gs-voice-choice" value={voicePreference} onChange={e=>setVoicePreference(e.target.value)}>
+            <option value="auto">Automatic (device default)</option>
+            {voiceOptions.map(v=><option key={v.id} value={v.id}>{v.label}</option>)}
+          </select>
+          <label htmlFor="gs-voice-speed">Voice speed · {voiceSpeed.toFixed(2)}×</label>
+          <input type="range" id="gs-voice-speed" min=".75" max="1.15" step=".05" value={voiceSpeed}
+            onChange={e=>setVoiceSpeed(Number(e.target.value))}/>
+          <p role="status">{audioStatus}</p>
+        </div>
         <div className="gs-jarvis-settings-actions">
           <button type="button" onClick={()=>fileRef.current?.click()}>Import JSON / HTML</button>
           <input ref={fileRef} type="file" accept=".json,.html,.htm" hidden onChange={e=>void importTheme(e.currentTarget.files?.[0])}/>
