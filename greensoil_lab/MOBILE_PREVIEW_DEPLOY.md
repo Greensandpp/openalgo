@@ -113,3 +113,11 @@ synthetic-data watermark improve phone readability. Live feeds remain absent.
 - The chart fills the browser visual viewport vertically on Android/mobile. Browser OS navigation and Chrome toolbar cannot be hidden by CSS; this is a full-viewport overlay, not forced native browser fullscreen.
 - Chart lifecycle reinitializes when expanded/collapsed to measure new dimensions; Escape key also exits.
 - Synthetic PAPER chart remains synthetic; no production, live market feed, broker or Railway changes.
+
+## V6.3 — Voice configuration and plasma states
+
+- Settings: voice engine selection, available device voices, pace controls, optional ElevenLabs.
+- Plasma has different listening, thinking, processing, speaking, completed animation profiles.
+- Gateway supports optional disabled-by-default ElevenLabs authenticated TTS with tight per-process daily caps, but no ElevenLabs API key is configured.
+- Public website cannot claim ElevenLabs connected, and always falls back to device browser voice.
+- No paid billing upgrades or production broker changes.
