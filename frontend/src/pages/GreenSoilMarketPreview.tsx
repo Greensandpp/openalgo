@@ -475,6 +475,7 @@ export default function GreenSoilMarketPreview() {
           {!trading && <div className="gs-jarvis-greeting" aria-label="JARVIS welcome message">{greeting}</div>}
           <div className="gs-jarvis-core"><ReactiveCore mode={mode} reducedMotion={reducedMotion} onTouch={() => { setMode('idle'); setAnswer('Energy pulse activated. Tap microphone to speak.'); }} particleCount={preset.particleCount} /></div>
           <div className="gs-jarvis-status">{answer}</div>
+          {reducedMotion && <button className="gs-jarvis-resume" type="button" onClick={()=>setReducedMotion(false)}>✦ Resume AI core animation</button>
           {!trading && <button type="button" className="gs-jarvis-welcome" onClick={()=>{cancelCurrent();speak(greeting,sessionRef.current)}} aria-label="Play JARVIS welcome greeting">◉ Hear welcome</button>
           {!trading && <button type="button" className="gs-jarvis-activate" onClick={() => execute('trading mode activate')}>◈ Activate Trading Mode</button>}
           {trading && <div className="gs-jarvis-trade-controls">
