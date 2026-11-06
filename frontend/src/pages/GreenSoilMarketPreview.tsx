@@ -218,7 +218,7 @@ export default function GreenSoilMarketPreview() {
   }
   const playElevenLabs = async (text: string, session: number): Promise<boolean> => {
     if (!gatewayConnected || !validGatewayUrl(gatewayUrl) || !gatewayToken) {
-      setAudioStatus('Brian not paired. Trying phone voice for this reply; Brian stays preferred.')
+      setAudioStatus('Brian unavailable: private Gemini gateway is not paired. Open Settings to connect.')
       return false
     }
     try {
@@ -239,6 +239,9 @@ export default function GreenSoilMarketPreview() {
         } catch { /* Provider responses are not guaranteed to be JSON. */ }
         if (response.status === 429 || reason === 'daily_tts_quota_exhausted')
           throw Error('daily_limit')
+        if (reason === 'elevenlabs_not_configured') throw Error('not_configured')
+        if (reason === 'unauthorized') throw Error('not_authorized')
+        if (reason === 'elevenlabs_provider_error') throw Error('provider_error')
         throw Error('voice_unavailable')
       }
       if (session !== sessionRef.current) return true
@@ -269,9 +272,15 @@ export default function GreenSoilMarketPreview() {
       return true
     } catch (error) {
       if (session !== sessionRef.current) return true
-      setAudioStatus(error instanceof Error && error.message === 'daily_limit'
-        ? 'Brian daily limit reached. Using phone voice temporarily; Brian remains selected.'
-        : 'Brian currently unavailable. Using phone voice temporarily; Brian remains selected.')
+      const cause = error instanceof Error ? error.message : ''
+      const reasons:Record<string,string> = {
+        daily_limit:'Brian daily safety limit reached (4 requests / 800 chars).',
+        not_configured:'Brian unavailable: ElevenLabs staging configuration missing.',
+        not_authorized:'Brian unavailable: gateway token invalid or expired.',
+        provider_error:'Brian unavailable: ElevenLabs provider rejected this request.',
+      }
+      setAudioStatus((reasons[cause] ?? 'Brian unavailable due to playback or network error.') +
+        ' Brian remains the preferred voice.')
       return false
     }
   }
@@ -492,8 +501,13 @@ export default function GreenSoilMarketPreview() {
           {!trading && <div className="gs-jarvis-greeting" aria-label="JARVIS welcome message">{greeting}</div>}
           <div className="gs-jarvis-core"><ReactiveCore mode={mode} reducedMotion={reducedMotion} onTouch={() => { setMode('idle'); setAnswer('Energy pulse activated. Tap microphone to speak.'); }} particleCount={preset.particleCount} /></div>
           <div className="gs-jarvis-status">{answer}</div>
+          {!trading && <p className="gs-jarvis-audio-status" role="status">{audioStatus}</p>
           {reducedMotion && <button className="gs-jarvis-resume" type="button" onClick={()=>setReducedMotion(false)}>✦ Resume AI core animation</button>}
           {!trading && <button type="button" className="gs-jarvis-welcome" onClick={()=>{cancelCurrent();speak(greeting,sessionRef.current)}} aria-label="Play JARVIS welcome greeting">◉ Hear welcome</button>}
+          {!trading && <button type="button" className="gs-jarvis-welcome" onClick={()=>{
+            cancelCurrent()
+            void playElevenLabs('Hello Boss. Brian speaking.',sessionRef.current)
+          }} aria-label="Test Brian ElevenLabs voice without phone voice fallback">◉ Test Brian voice</button>}
           {!trading && <button type="button" className="gs-jarvis-welcome" onClick={()=>{cancelCurrent();speakDevice(greeting,sessionRef.current)}} aria-label="Test phone voice">◉ Test phone voice</button>}
           {!trading && <button type="button" className="gs-jarvis-activate" onClick={() => execute('trading mode activate')}>◈ Activate Trading Mode</button>}
           {trading && <div className="gs-jarvis-trade-controls">
