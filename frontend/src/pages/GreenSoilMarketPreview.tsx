@@ -81,6 +81,7 @@ export default function GreenSoilMarketPreview() {
   const fileRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
+    let clearVoiceListener: (()=>void) | undefined
     const w = window as SpeechWindow
     setMicSupported(Boolean(w.SpeechRecognition || w.webkitSpeechRecognition))
     if ('speechSynthesis' in window) {
@@ -90,13 +91,14 @@ export default function GreenSoilMarketPreview() {
       }
       listVoices()
       window.speechSynthesis.addEventListener('voiceschanged',listVoices)
-      // Return cleanup handled by the single effect return below.
+      clearVoiceListener = () => window.speechSynthesis.removeEventListener('voiceschanged',listVoices)
     }
     try {
       const raw = window.localStorage.getItem(LOCAL_KEY)
       if (raw) setPreset(validatePreset(JSON.parse(raw) as unknown))
     } catch { /* Ignore invalid local settings; use safe default. */ }
     return () => {
+      clearVoiceListener?.()
       micRef.current?.stop()
       if ('speechSynthesis' in window) window.speechSynthesis.cancel()
       timersRef.current.forEach(window.clearTimeout)
