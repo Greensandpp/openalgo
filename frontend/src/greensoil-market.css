@@ -522,3 +522,34 @@ box-shadow:0 0 84px #ff631b28}
 .gs-jarvis-gateway-settings input{min-width:0;width:100%;background:#07150c;border:1px solid #5a9c746f;border-radius:10px;
 color:#eafff0;padding:10px 11px;font-size:12px}
 .gs-jarvis-gateway-settings input:focus-visible{outline:2px solid #00dd65;outline-offset:2px}
+
+
+/* Full-viewport vertical chart mode (browser-safe, works in Android in-app views).
+ * Does not claim to hide the OS status/navigation or browser chrome. */
+.gs-chart-stage{width:100%;min-width:0;position:relative}
+.gs-chart-view-canvas{height:380px!important;background:#080d0b;min-width:0}
+.gs-chart-actionbar{display:flex;align-items:center;justify-content:space-between;gap:8px;
+  padding:9px 3px;color:#89cba2;font-size:10px;letter-spacing:.06em}
+.gs-chart-actionbar button,.gs-chart-full-header button{display:inline-flex;align-items:center;justify-content:center;
+  gap:7px;border:1px solid #1cf47b97;border-radius:10px;background:#063018;color:#e7fff0;
+  font-size:12px;font-weight:720;padding:10px 13px;min-height:42px;cursor:pointer}
+.gs-chart-actionbar button span{font-size:20px;line-height:1}
+.gs-chart-stage-maximized{position:fixed!important;z-index:1000!important;inset:0;
+  width:100vw!important;height:100dvh!important;max-width:none!important;overflow:hidden;
+  background:#020905;display:flex;flex-direction:column;padding:calc(8px + env(safe-area-inset-top,0px)) 8px calc(8px + env(safe-area-inset-bottom,0px));
+  box-shadow:0 0 0 100vmax #000}
+.gs-chart-full-header{display:flex;align-items:center;justify-content:space-between;gap:9px;
+  padding:5px 3px 12px;flex:0 0 auto;border-bottom:1px solid #1ce47844;margin-bottom:8px}
+.gs-chart-full-header div{min-width:0;display:grid;gap:3px}
+.gs-chart-full-header strong{color:#e8fff0;font-size:15px}
+.gs-chart-full-header small{color:#8ecaab;font-size:9px;letter-spacing:.03em}
+.gs-chart-stage-maximized .gs-chart-view-canvas{height:auto!important;min-height:0!important;
+  flex:1 1 auto!important;width:100%!important;border:1px solid #2ac76a56;
+  border-radius:8px;background:#080d0b;touch-action:pan-x pan-y}
+.gs-chart-stage-maximized .gs-chart-actionbar{flex:0 0 auto;padding:9px 3px 1px}
+.gs-chart-stage-maximized .gs-chart-actionbar span{color:#9ed9b5}
+@media(max-width:420px){
+ .gs-chart-full-header small{font-size:8px}
+ .gs-chart-full-header button{font-size:11px;padding:8px}
+ .gs-chart-actionbar span{font-size:9px}
+}
