@@ -446,7 +446,7 @@ export default function GreenSoilMarketPreview() {
         <p className="gs-jarvis-theme-notice" role="status">{themeNotice || `Theme: ${preset.name} · ${preset.particleCount} particles`}</p>
         {htmlPreview && <iframe sandbox="" title="Untrusted HTML design preview, scripts blocked" srcDoc={htmlPreview} className="gs-jarvis-html-preview"/>}
       </section>}
-      <form className="gs-jarvis-commandbar" onSubmit={event=>{event.preventDefault();execute(command)}}>
+      <form aria-busy={askingGemini} className="gs-jarvis-commandbar" onSubmit={event=>{event.preventDefault();execute(command)}}>
         <label className="gs-jarvis-sr" htmlFor="gs-jarvis-command">Command</label>
         <input id="gs-jarvis-command" value={command} onChange={e=>setCommand(e.target.value)} placeholder="Ask JARVIS or activate Trading Mode..." maxLength={180}/>
         <button type="submit" className="gs-jarvis-send" title="Send command" aria-label="Send command">➤</button>
