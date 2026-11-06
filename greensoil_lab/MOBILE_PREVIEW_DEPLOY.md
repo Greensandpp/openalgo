@@ -133,3 +133,11 @@ synthetic-data watermark improve phone readability. Live feeds remain absent.
 ## V6.4 Deployment — 2026-11-06
 
 Publish the latest compiled PAPER preview with Voice engine Settings, ElevenLabs optional TTS selection, browser voice fallback, correct private TTS URL and chart fullscreen controls. API keys are not bundled. Actual ElevenLabs phone playback still requires testing. Production systems untouched.
+
+## V6.5 — synchronized Brian voice + AI states
+
+- Speech recognition starts listening state; after transcription Gemini request shows thinking.
+- Processing/completed animation transitions precede ElevenLabs speech and only return to idle on audio ending.
+- Stop voice cancels mic, queued state timers, pending AI/TTS network requests and active audio; stale async callbacks cannot resume the core.
+- Browser voice remains a safe fallback, Brian remains the selected ElevenLabs service voice, no market/news feed or broker orders added.
+- New frontend TypeScript gate passed; actual mobile state transition QA still pending.
