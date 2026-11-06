@@ -133,7 +133,7 @@ export default function GreenSoilMarketPreview() {
       return false
     }
     try {
-      const response = await fetch(gatewayUrl.replace(/\\/$/, '') + '/api/tts', {
+      const response = await fetch(gatewayUrl.replace(/\/$/, '') + '/api/tts', {
         method: 'POST', credentials: 'omit', cache: 'no-store',
         headers: {Authorization: 'Bearer '+gatewayToken, 'Content-Type': 'application/json'},
         body: JSON.stringify({text:text.slice(0,200)}),
@@ -375,11 +375,11 @@ export default function GreenSoilMarketPreview() {
             const next=e.target.value as 'browser'|'elevenlabs'
             setVoiceProvider(next)
             setAudioStatus(next==='elevenlabs' ?
-              'ElevenLabs requires separate secure staging API integration. Browser voice remains fallback.' :
+              'ElevenLabs is optional and needs a separate API key in Railway staging. Browser voice remains fallback.' :
               'Browser voice selected. No API credits used.')
           }}>
             <option value="browser">Device voice — free / available now</option>
-            <option value="elevenlabs">ElevenLabs — optional / not connected</option>
+            <option value="elevenlabs">ElevenLabs — optional (requires secure API key)</option>
           </select>
           <label htmlFor="gs-voice-choice">Device voice</label>
           <select id="gs-voice-choice" value={voicePreference} onChange={e=>setVoicePreference(e.target.value)}>
