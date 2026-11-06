@@ -129,3 +129,7 @@ synthetic-data watermark improve phone readability. Live feeds remain absent.
 - Fixed trailing-slash removal in optional audio endpoint URL; endpoint now resolves to the private Railway gateway correctly when pairing is enabled.
 - User-facing provider label no longer suggests the voice is already live; no actual ElevenLabs credits used or API requests made.
 - Existing read-only PAPER demo, mobile fullscreen chart, no broker orders, separate Railway production and AIRA remain unchanged.
+
+## V6.4 Deployment — 2026-11-06
+
+Publish the latest compiled PAPER preview with Voice engine Settings, ElevenLabs optional TTS selection, browser voice fallback, correct private TTS URL and chart fullscreen controls. API keys are not bundled. Actual ElevenLabs phone playback still requires testing. Production systems untouched.
