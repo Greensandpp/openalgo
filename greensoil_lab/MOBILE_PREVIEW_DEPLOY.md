@@ -148,3 +148,11 @@ Publish the latest compiled PAPER preview with Voice engine Settings, ElevenLabs
 - Gateway access token stays in React memory unless the user explicitly chooses Remember this browser tab; in that case the separate bearer token alone is stored in sessionStorage, restored on same-tab reload, and must be revalidated by pressing Connect Gemini. Tab/session close discards it; Disconnect clears it.
 - Google/ElevenLabs provider API keys remain server-side in Railway. No auto-login across browser/tab restarts, no paid billing and no broker changes.
 - Frontend TypeScript validation passed. Mobile reload testing pending.
+
+## V6.7 — Multilingual voice and text navigation
+
+- Local offline intent parser handles common natural Tamil/Tanglish/English chart commands: NIFTY/SENSEX open, trading mode activation and return to JARVIS core.
+- Trading-mode activation keeps current selected index, rather than always reverting to NIFTY.
+- High-stakes live next-target/new-entry/option premium questions are explicitly blocked with NO TRADE when trusted NSE/news feeds are missing; unknown general conversation goes only to separately paired Gemini.
+- Automated 28-case intent tests plus TypeScript gate PASS. Actual on-device mic transcription QA remains pending.
+- Brian ElevenLabs configuration, secure gateway pairing, all saved settings and production trading services untouched.
