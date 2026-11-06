@@ -179,3 +179,10 @@ Publish the latest compiled PAPER preview with Voice engine Settings, ElevenLabs
 - Railway staging ElevenLabs quota remains intentionally restricted to 4 requests / 800 text characters per worker day for free-tier protection. This is not unlimited playback and can stop after a few interactions; do not incur added costs or alter limits without user approval.
 - Greeting and emerald plasma changes remain present, saved encrypted pairing preserved, no production bot modifications.
 - TypeScript frontend and multilingual safety tests PASS; physical Android audio replay QA pending.
+
+## V7.1 — voice recovery after Brian outage
+
+- User reported no voice after V7.0 locked Brian output. Restore temporary browser speech fallback when Brian voice quota, pairing, network or playback fails, while keeping Brian as the preferred selected engine.
+- Add explicit user-gesture Test phone voice button on the home screen so Android browser speech output can be diagnosed without making ElevenLabs calls.
+- Phone voice fallback is labeled honestly in Settings, does not permanently switch the preferred voice selection, and preserves existing Railway free-tier limits.
+- Frontend TypeScript and multilingual routing checks passed; live Android playback confirmation remains necessary.
