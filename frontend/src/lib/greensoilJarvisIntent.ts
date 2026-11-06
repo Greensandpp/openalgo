@@ -9,9 +9,6 @@ export type JarvisIntent =
   | {kind:'unavailable_market'}
   | {kind:'conversation'}
 
-const includesAny = (text:string, words:readonly string[]) =>
-  words.some(w => text.includes(w))
-
 export function parseJarvisIntent(utterance: string, currentSymbol:'NIFTY'|'SENSEX'='NIFTY'):JarvisIntent {
   const x = utterance.normalize('NFKC').toLocaleLowerCase().replace(/[.,!?]/g,' ').replace(/\s+/g,' ').trim()
   if (!x) return {kind:'conversation'}
