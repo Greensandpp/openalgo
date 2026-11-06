@@ -73,7 +73,7 @@ export default function GreenSoilMarketPreview() {
   const [voiceOptions, setVoiceOptions] = useState<Array<{id:string;label:string}>>([])
   const [voiceSpeed, setVoiceSpeed] = useState(.96)
   const [voiceProvider, setVoiceProvider] = useState<'browser'|'elevenlabs'>('elevenlabs')
-  const [audioStatus, setAudioStatus] = useState('Browser voice ready. ElevenLabs connection not configured.')
+  const [audioStatus, setAudioStatus] = useState('Brian (ElevenLabs) selected. Voice requires gateway pairing and available daily credits.')
   const [micSupported, setMicSupported] = useState(false)
   const [preset, setPreset] = useState<Preset>(DEFAULT_PRESET)
   const [htmlPreview, setHtmlPreview] = useState<string | null>(null)
@@ -218,7 +218,7 @@ export default function GreenSoilMarketPreview() {
   }
   const playElevenLabs = async (text: string, session: number): Promise<boolean> => {
     if (!gatewayConnected || !validGatewayUrl(gatewayUrl) || !gatewayToken) {
-      setAudioStatus('ElevenLabs not paired. Using device voice fallback.')
+      setAudioStatus('Brian voice unavailable until Gemini gateway is paired. Audio paused; text reply remains visible.')
       return false
     }
     try {
@@ -230,7 +230,17 @@ export default function GreenSoilMarketPreview() {
         body: JSON.stringify({text:text.slice(0,200)}),
         signal: AbortSignal.any([AbortSignal.timeout(24000), requestRef.current?.signal ?? new AbortController().signal]),
       })
-      if (!response.ok) throw Error('ElevenLabs unavailable')
+      if (!response.ok) {
+        let reason = ''
+        try {
+          const detail:unknown = await response.json()
+          if (detail && typeof detail === 'object' && 'error' in detail && typeof detail.error === 'string')
+            reason = detail.error
+        } catch { /* Provider responses are not guaranteed to be JSON. */ }
+        if (response.status === 429 || reason === 'daily_tts_quota_exhausted')
+          throw Error('daily_limit')
+        throw Error('voice_unavailable')
+      }
       if (session !== sessionRef.current) return true
       const blob = await response.blob()
       if (session !== sessionRef.current) return true
@@ -257,16 +267,19 @@ export default function GreenSoilMarketPreview() {
       setAudioStatus('Playing Brian ElevenLabs voice')
       setMode('speaking')
       return true
-    } catch {
+    } catch (error) {
       if (session !== sessionRef.current) return true
-      setAudioStatus('ElevenLabs unavailable or quota exhausted. Using device voice fallback.')
+      setMode('idle')
+      setAudioStatus(error instanceof Error && error.message === 'daily_limit'
+        ? 'Brian ElevenLabs daily free-tier cap reached. Voice paused; no automatic change to device voice.'
+        : 'Brian ElevenLabs unavailable. Voice paused; no automatic change to device voice.')
       return false
     }
   }
   const speak = (text: string, session: number) => {
     if (session !== sessionRef.current) return
     if (!spokenReplies) { setMode('idle'); return }
-    if (voiceProvider === 'elevenlabs') { void playElevenLabs(text, session).then(ok => { if (!ok && session === sessionRef.current) speakDevice(text, session) }); return }
+    if (voiceProvider === 'elevenlabs') { void playElevenLabs(text, session); return }
     speakDevice(text, session)
   }
   const speakDevice = (text: string, session: number) => {
@@ -501,11 +514,11 @@ export default function GreenSoilMarketPreview() {
             const next=e.target.value as 'browser'|'elevenlabs'
             setVoiceProvider(next)
             setAudioStatus(next==='elevenlabs' ?
-              'ElevenLabs is optional and needs a separate API key in Railway staging. Browser voice remains fallback.' :
+              'Brian ElevenLabs selected. If unavailable or free quota reached, voice pauses instead of changing to a different speaker.' :
               'Browser voice selected. No API credits used.')
           }}>
-            <option value="browser">Device voice — free / available now</option>
-            <option value="elevenlabs">ElevenLabs — optional (requires secure API key)</option>
+            <option value="browser">Device voice — manual alternative only</option>
+            <option value="elevenlabs">Brian — ElevenLabs (preferred, no automatic fallback)</option>
           </select>
           <label htmlFor="gs-voice-choice">Device voice</label>
           <select id="gs-voice-choice" value={voicePreference} onChange={e=>setVoicePreference(e.target.value)}>
