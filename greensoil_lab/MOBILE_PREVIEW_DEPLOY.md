@@ -201,3 +201,10 @@ Publish the latest compiled PAPER preview with Voice engine Settings, ElevenLabs
 - Idle still pulses softly; listening, processing, thinking and speaking affect motion rate and intensity. Motion reduction continues respecting preference, page visibility and OS accessibility rules.
 - Brian ElevenLabs remains the preferred configured voice and settings are preserved. This commit does not increase paid/free ElevenLabs limits, so when Brian quota is exhausted the previous clearly labeled temporary phone-voice fallback remains.
 - TypeScript and language-command checks PASS; real iQOO Android rendering QA is pending.
+
+## V7.4 — Brian-first free offline phrase caching
+
+- Cache a narrow allowlist of generic Brian generated greetings/test phrases only in local IndexedDB with a 30-day expiry; never store arbitrary conversation text, account secrets, API tokens, private audio or voice-model weights.
+- Check for local cached Brian clip before network/gateway so replay works when service is offline or provider daily quota is exhausted. New utterances still need ElevenLabs credits and an authenticated gateway.
+- Brian is the preferred configured voice; automatic Android female browser-voice fallback is disabled. Explicit Test phone voice remains for manual diagnostics.
+- Free-tier request/character guard unchanged, no new recurring charges, no production changes. Frontend TypeScript + intent routing + dedicated cache privacy tests PASS. Real-device playback QA pending.
