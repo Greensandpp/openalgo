@@ -171,3 +171,11 @@ Publish the latest compiled PAPER preview with Voice engine Settings, ElevenLabs
 - Updated visual CSS for animated green plasma core with visible inner motion and energy halo even while idle; Resume AI core animation button appears if previously saved Reduce animation is enabled.
 - User requested retaining gateway token in chat, but credentials must never be written into GitHub, project documents or logs. Keep private gateway pairing in encrypted device browser storage and rotate any token exposed in chat.
 - Brian ElevenLabs and saved device pairing untouched. TypeScript frontend and multilingual intent CI PASS; on-phone animation QA pending.
+
+## V7.0 — Brian-only voice lock and truthful free-tier statuses
+
+- ElevenLabs Brian remains the default preferred voice. Frontend never silently changes to browser voice following ElevenLabs quota exhaustion, API errors, failed authorization or audio errors.
+- Explicit browser voice remains available only by user selection. When Brian cannot play, show the text response with a clear paused/unavailable status and return core to idle.
+- Railway staging ElevenLabs quota remains intentionally restricted to 4 requests / 800 text characters per worker day for free-tier protection. This is not unlimited playback and can stop after a few interactions; do not incur added costs or alter limits without user approval.
+- Greeting and emerald plasma changes remain present, saved encrypted pairing preserved, no production bot modifications.
+- TypeScript frontend and multilingual safety tests PASS; physical Android audio replay QA pending.
