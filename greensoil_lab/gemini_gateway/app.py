@@ -14,7 +14,7 @@ import urllib.error
 import urllib.parse
 import urllib.request
 
-from flask import Flask, jsonify, request
+from flask import Flask, jsonify, request, Response
 
 app = Flask(__name__)
 app.config["MAX_CONTENT_LENGTH"] = 16_384
@@ -27,6 +27,10 @@ MAX_REQUESTS_PER_MINUTE = 3
 MAX_REQUESTS_PER_DAY = 20
 _AUTH_FAILURES = deque()
 MAX_AUTH_FAILURES_PER_MINUTE = 30
+_TTS_LOCK = threading.Lock()
+_TTS_DAILY = {"day": None, "count": 0, "characters": 0}
+MAX_TTS_PER_DAY = 4
+MAX_TTS_CHARS_PER_DAY = 800
 
 
 SYSTEM_INSTRUCTION = (
@@ -203,6 +207,78 @@ def chat():
         return _reply({"error": "model_unavailable_or_quota", "http_status": exc.code}, 502)
     except (urllib.error.URLError, TimeoutError, ValueError, KeyError, OSError):
         return _reply({"error": "model_request_failed"}, 502)
+
+
+def _reserve_tts_quota(characters):
+    now_day = int(time.time() // 86400)
+    with _TTS_LOCK:
+        if _TTS_DAILY["day"] != now_day:
+            _TTS_DAILY.update(day=now_day, count=0, characters=0)
+        if (_TTS_DAILY["count"] >= MAX_TTS_PER_DAY or
+                _TTS_DAILY["characters"] + characters > MAX_TTS_CHARS_PER_DAY):
+            return False
+        _TTS_DAILY["count"] += 1
+        _TTS_DAILY["characters"] += characters
+    return True
+
+
+@app.route("/api/tts", methods=["OPTIONS"])
+def tts_preflight():
+    return preflight()
+
+
+@app.post("/api/tts")
+def voice_tts():
+    """Optional, hard-capped ElevenLabs voice. Disabled until secrets provided."""
+    settings = _settings()
+    voice_key = os.environ.get("ELEVENLABS_API_KEY", "").strip()
+    voice_id = os.environ.get("ELEVENLABS_VOICE_ID", "").strip()
+    enabled = os.environ.get("ENABLE_ELEVENLABS_TTS", "").lower() == "true"
+    if not all((enabled, voice_key, voice_id, settings["token"], settings["origin"])):
+        return _reply({"error": "elevenlabs_not_configured"}, 503)
+    if request.headers.get("Origin") != settings["origin"]:
+        return _reply({"error": "origin_not_allowed"}, 403)
+    if not _authenticated(settings):
+        return _reply({"error": "unauthorized"}, 401)
+    payload = request.get_json(silent=True)
+    text = payload.get("text") if isinstance(payload, dict) else None
+    if not isinstance(text, str) or not 1 <= len(text.strip()) <= 200:
+        return _reply({"error": "invalid_text"}, 400)
+    # Strict voice ID validation: no URL injection or arbitrary paid voices.
+    if len(voice_id) > 80 or any(c not in "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_-" for c in voice_id):
+        return _reply({"error": "invalid_voice_configuration"}, 503)
+    if not _reserve_tts_quota(len(text)):
+        return _reply({"error": "daily_tts_quota_exhausted"}, 429)
+    body = json.dumps({
+        "text": text.strip(),
+        "model_id": "eleven_flash_v2_5",
+        "voice_settings": {"stability": 0.55, "similarity_boost": 0.7},
+    }).encode()
+    url = "https://api.elevenlabs.io/v1/text-to-speech/" + voice_id
+    req = urllib.request.Request(url, data=body, method="POST", headers={
+        "xi-api-key": voice_key, "Content-Type": "application/json",
+        "Accept": "audio/mpeg",
+    })
+    try:
+        with urllib.request.urlopen(req, timeout=20) as remote:
+            content_type = remote.headers.get("Content-Type", "")
+            if not content_type.lower().startswith("audio/"):
+                return _reply({"error": "unexpected_tts_format"}, 502)
+            # Enforce small audio responses. No caching on either side.
+            audio = remote.read(384_001)
+            if len(audio) > 384_000 or not audio:
+                return _reply({"error": "invalid_tts_audio"}, 502)
+        response = Response(audio, mimetype="audio/mpeg")
+        origin = settings["origin"]
+        response.headers["Access-Control-Allow-Origin"] = origin
+        response.headers["Vary"] = "Origin"
+        response.headers["Cache-Control"] = "no-store"
+        response.headers["X-Content-Type-Options"] = "nosniff"
+        return response
+    except urllib.error.HTTPError as error:
+        return _reply({"error": "elevenlabs_provider_error", "http_status": error.code}, 502)
+    except (urllib.error.URLError, TimeoutError, OSError, ValueError):
+        return _reply({"error": "elevenlabs_connection_error"}, 502)
 
 
 @app.route("/api/<path:unused>", methods=["POST", "PUT", "PATCH", "DELETE"])
