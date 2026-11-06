@@ -38,6 +38,20 @@ function zoneColor(zone: Zone): string {
 }
 function ChartView({ symbol, baseline, overlays }: { symbol: IndexSymbol; baseline: Baseline | null; overlays: Overlay[] }) {
   const host = useRef<HTMLDivElement>(null)
+  const [maximized, setMaximized] = useState(false)
+  useEffect(() => {
+    if (!maximized) return
+    const before = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') setMaximized(false)
+    }
+    document.addEventListener('keydown', onKey)
+    return () => {
+      document.body.style.overflow = before
+      document.removeEventListener('keydown', onKey)
+    }
+  }, [maximized])
   const instrument = baseline?.instruments[symbol] ?? synthetic(symbol)
   useEffect(() => {
     const element = host.current
@@ -80,8 +94,29 @@ function ChartView({ symbol, baseline, overlays }: { symbol: IndexSymbol; baseli
       chart.destroy()
       element.innerHTML = ''
     }
-  }, [symbol, baseline, overlays])
-  return <div ref={host} className="gs-price-chart h-[380px] w-full overflow-hidden rounded-md border" />
+  }, [symbol, baseline, overlays, maximized])
+  return (
+    <section className={`gs-chart-stage ${maximized ? 'gs-chart-stage-maximized' : ''}`}
+      aria-label={`${symbol} five-minute synthetic PAPER chart`}>
+      {maximized && (
+        <header className="gs-chart-full-header">
+          <div><strong>{symbol} · 5 MIN</strong><small>DEMO · SYNTHETIC CANDLES · NO LIVE FEED</small></div>
+          <button type="button" onClick={() => setMaximized(false)}
+            aria-label="Close full-screen chart">✕ Close</button>
+        </header>
+      )}
+      <div ref={host} className="gs-price-chart gs-chart-view-canvas w-full overflow-hidden rounded-md border" />
+      <div className="gs-chart-actionbar">
+        <span>{symbol} · 5m · PAPER DEMO</span>
+        <button type="button" aria-pressed={maximized}
+          onClick={() => setMaximized(open => !open)}
+          aria-label={maximized ? 'Minimize chart' : 'Maximize chart to vertical full screen'}>
+          <span aria-hidden="true">{maximized ? '⊟' : '⛶'}</span>
+          {maximized ? 'Minimize chart' : 'Maximize chart'}
+        </button>
+      </div>
+    </section>
+  )
 }
 export default function GreenSoilLab({ selectedSymbol }: { selectedSymbol?: IndexSymbol } = {}) {
   const [symbol, setSymbol] = useState<IndexSymbol>(selectedSymbol ?? 'NIFTY')
