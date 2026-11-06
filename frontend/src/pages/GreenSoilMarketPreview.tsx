@@ -218,7 +218,7 @@ export default function GreenSoilMarketPreview() {
   }
   const playElevenLabs = async (text: string, session: number): Promise<boolean> => {
     if (!gatewayConnected || !validGatewayUrl(gatewayUrl) || !gatewayToken) {
-      setAudioStatus('Brian voice unavailable until Gemini gateway is paired. Audio paused; text reply remains visible.')
+      setAudioStatus('Brian not paired. Trying phone voice for this reply; Brian stays preferred.')
       return false
     }
     try {
@@ -269,20 +269,24 @@ export default function GreenSoilMarketPreview() {
       return true
     } catch (error) {
       if (session !== sessionRef.current) return true
-      setMode('idle')
       setAudioStatus(error instanceof Error && error.message === 'daily_limit'
-        ? 'Brian ElevenLabs daily free-tier cap reached. Voice paused; no automatic change to device voice.'
-        : 'Brian ElevenLabs unavailable. Voice paused; no automatic change to device voice.')
+        ? 'Brian daily limit reached. Using phone voice temporarily; Brian remains selected.'
+        : 'Brian currently unavailable. Using phone voice temporarily; Brian remains selected.')
       return false
     }
   }
   const speak = (text: string, session: number) => {
     if (session !== sessionRef.current) return
     if (!spokenReplies) { setMode('idle'); return }
-    if (voiceProvider === 'elevenlabs') { void playElevenLabs(text, session); return }
+    if (voiceProvider === 'elevenlabs') {
+      void playElevenLabs(text, session).then(ok => {
+        if (!ok && session === sessionRef.current) speakDevice(text, session, true)
+      })
+      return
+    }
     speakDevice(text, session)
   }
-  const speakDevice = (text: string, session: number) => {
+  const speakDevice = (text: string, session: number, fallback = false) => {
     if (!('speechSynthesis' in window)) { setMode('idle'); return }
     window.speechSynthesis.cancel()
     const say = new SpeechSynthesisUtterance(text)
@@ -292,7 +296,7 @@ export default function GreenSoilMarketPreview() {
     say.lang = chosen?.lang ?? 'en-IN'
     say.rate = voiceSpeed
     speechRef.current = say
-    say.onstart = () => { if (session === sessionRef.current) { setMode('speaking'); setAudioStatus('Speaking via device browser voice') } }
+    say.onstart = () => { if (session === sessionRef.current) { setMode('speaking'); setAudioStatus(fallback ? 'Temporary device voice (Brian still preferred)' : 'Speaking via device browser voice') } }
     say.onend = () => { if (session === sessionRef.current) setMode('idle') }
     say.onerror = () => { if (session === sessionRef.current) { setMode('idle'); setAudioStatus('Voice output unavailable; answer remains visible as text') } }
     window.speechSynthesis.speak(say)
@@ -490,6 +494,7 @@ export default function GreenSoilMarketPreview() {
           <div className="gs-jarvis-status">{answer}</div>
           {reducedMotion && <button className="gs-jarvis-resume" type="button" onClick={()=>setReducedMotion(false)}>✦ Resume AI core animation</button>}
           {!trading && <button type="button" className="gs-jarvis-welcome" onClick={()=>{cancelCurrent();speak(greeting,sessionRef.current)}} aria-label="Play JARVIS welcome greeting">◉ Hear welcome</button>}
+          {!trading && <button type="button" className="gs-jarvis-welcome" onClick={()=>{cancelCurrent();speakDevice(greeting,sessionRef.current)}} aria-label="Test phone voice">◉ Test phone voice</button>}
           {!trading && <button type="button" className="gs-jarvis-activate" onClick={() => execute('trading mode activate')}>◈ Activate Trading Mode</button>}
           {trading && <div className="gs-jarvis-trade-controls">
             <button type="button" aria-pressed={symbol==='NIFTY'} onClick={()=>execute('open nifty chart')}>NIFTY</button>
@@ -514,11 +519,11 @@ export default function GreenSoilMarketPreview() {
             const next=e.target.value as 'browser'|'elevenlabs'
             setVoiceProvider(next)
             setAudioStatus(next==='elevenlabs' ?
-              'Brian ElevenLabs selected. If unavailable or free quota reached, voice pauses instead of changing to a different speaker.' :
+              'Brian selected permanently. On provider failure, phone voice is used for that reply only.' :
               'Browser voice selected. No API credits used.')
           }}>
-            <option value="browser">Device voice — manual alternative only</option>
-            <option value="elevenlabs">Brian — ElevenLabs (preferred, no automatic fallback)</option>
+            <option value="browser">Device voice — free alternative</option>
+            <option value="elevenlabs">Brian — ElevenLabs (preferred, phone backup)</option>
           </select>
           <label htmlFor="gs-voice-choice">Device voice</label>
           <select id="gs-voice-choice" value={voicePreference} onChange={e=>setVoicePreference(e.target.value)}>
