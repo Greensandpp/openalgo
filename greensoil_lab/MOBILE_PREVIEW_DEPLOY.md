@@ -194,3 +194,10 @@ Publish the latest compiled PAPER preview with Voice engine Settings, ElevenLabs
 - Distinguishes Brian gateway unpaired, quota 429, provider rejection, configuration and network/audio errors without exposing API credentials.
 - Normal spoken replies still prefer Brian and temporarily use browser voice when Brian fails, as requested for uninterrupted audio; successful Brian voice remains chosen.
 - TypeScript and routing tests PASS. Actual Android browser test pending.
+
+## V7.3 — JARVIS-first emerald plasma visualization
+
+- Prioritized JARVIS over AIRA/trading integrations. Rebuilt core canvas color palette as emerald/green instead of orange, with three continuously moving volumetric plasma ribbons, energized particles and light beams.
+- Idle still pulses softly; listening, processing, thinking and speaking affect motion rate and intensity. Motion reduction continues respecting preference, page visibility and OS accessibility rules.
+- Brian ElevenLabs remains the preferred configured voice and settings are preserved. This commit does not increase paid/free ElevenLabs limits, so when Brian quota is exhausted the previous clearly labeled temporary phone-voice fallback remains.
+- TypeScript and language-command checks PASS; real iQOO Android rendering QA is pending.
