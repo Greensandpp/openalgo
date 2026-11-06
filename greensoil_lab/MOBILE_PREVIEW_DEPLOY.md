@@ -141,3 +141,10 @@ Publish the latest compiled PAPER preview with Voice engine Settings, ElevenLabs
 - Stop voice cancels mic, queued state timers, pending AI/TTS network requests and active audio; stale async callbacks cannot resume the core.
 - Browser voice remains a safe fallback, Brian remains the selected ElevenLabs service voice, no market/news feed or broker orders added.
 - New frontend TypeScript gate passed; actual mobile state transition QA still pending.
+
+## V6.6 — settings persistence
+
+- Voice provider (ElevenLabs Brian or browser), speech toggle, voice rate and UI motion/sound preferences auto-save in localStorage. Credentials are NEVER put in localStorage.
+- Gateway access token stays in React memory unless the user explicitly chooses Remember this browser tab; in that case the separate bearer token alone is stored in sessionStorage, restored on same-tab reload, and must be revalidated by pressing Connect Gemini. Tab/session close discards it; Disconnect clears it.
+- Google/ElevenLabs provider API keys remain server-side in Railway. No auto-login across browser/tab restarts, no paid billing and no broker changes.
+- Frontend TypeScript validation passed. Mobile reload testing pending.
