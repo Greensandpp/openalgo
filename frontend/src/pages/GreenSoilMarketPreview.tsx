@@ -29,6 +29,9 @@ const DEFAULT_PRESET: Preset = {
   backgroundColor: '#050B07', geometry: 'plasma', particleCount: 380,
 }
 const LOCAL_KEY = 'gs-intelligent-safe-theme-v1'
+const PREFERENCES_KEY = 'gs-jarvis-preferences-v1'
+const TAB_PAIRING_KEY = 'gs-jarvis-tab-pairing-v1'
+const DEFAULT_GATEWAY_URL = 'https://jarvis-gemini-gateway-staging.up.railway.app/'
 const GEOMETRIES = ['orbital', 'hud', 'matrix', 'vortex', 'wave', 'plasma']
 const COLORS = /^#[0-9a-fA-F]{6}$/
 function validatePreset(v: unknown): Preset {
@@ -71,9 +74,11 @@ export default function GreenSoilMarketPreview() {
   const [preset, setPreset] = useState<Preset>(DEFAULT_PRESET)
   const [htmlPreview, setHtmlPreview] = useState<string | null>(null)
   const [themeNotice, setThemeNotice] = useState('')
-  const [gatewayUrl, setGatewayUrl] = useState('https://jarvis-gemini-gateway-staging.up.railway.app/')
+  const [gatewayUrl, setGatewayUrl] = useState(DEFAULT_GATEWAY_URL)
   const [gatewayToken, setGatewayToken] = useState('')
   const [gatewayConnected, setGatewayConnected] = useState(false)
+  const [rememberTab, setRememberTab] = useState(false)
+  const [preferencesLoaded, setPreferencesLoaded] = useState(false)
   const [gatewayStatus, setGatewayStatus] = useState('Private Gemini staging pairing pending')
   const [askingGemini, setAskingGemini] = useState(false)
   const micRef = useRef<VoiceRecognizer | null>(null)
@@ -102,6 +107,31 @@ export default function GreenSoilMarketPreview() {
       const raw = window.localStorage.getItem(LOCAL_KEY)
       if (raw) setPreset(validatePreset(JSON.parse(raw) as unknown))
     } catch { /* Ignore invalid local settings; use safe default. */ }
+    try {
+      const raw = window.localStorage.getItem(PREFERENCES_KEY)
+      const stored: unknown = raw ? JSON.parse(raw) : null
+      if (stored && typeof stored === 'object') {
+        const p = stored as Record<string, unknown>
+        if (p.voiceProvider === 'elevenlabs' || p.voiceProvider === 'browser') setVoiceProvider(p.voiceProvider)
+        if (typeof p.spokenReplies === 'boolean') setSpokenReplies(p.spokenReplies)
+        if (typeof p.soundEffects === 'boolean') setSoundEffects(p.soundEffects)
+        if (typeof p.reducedMotion === 'boolean') setReducedMotion(p.reducedMotion)
+        if (typeof p.voicePreference === 'string' && /^(auto|[0-9]{1,3})$/.test(p.voicePreference)) setVoicePreference(p.voicePreference)
+        if (typeof p.voiceSpeed === 'number' && Number.isFinite(p.voiceSpeed) && p.voiceSpeed >= .75 && p.voiceSpeed <= 1.15) setVoiceSpeed(p.voiceSpeed)
+        if (typeof p.gatewayUrl === 'string' && p.gatewayUrl === DEFAULT_GATEWAY_URL) setGatewayUrl(p.gatewayUrl)
+      }
+    } catch { /* Storage may be blocked or stale. */ }
+    try {
+      // Session storage survives a same-tab reload, not closing the browser tab.
+      // The Google and ElevenLabs API keys are never stored here.
+      const tabToken = window.sessionStorage.getItem(TAB_PAIRING_KEY)
+      if (tabToken && tabToken.length >= 32 && tabToken.length <= 200) {
+        setGatewayToken(tabToken)
+        setRememberTab(true)
+        setGatewayStatus('Saved tab token restored. Tap Connect Gemini to verify it again.')
+      }
+    } catch { /* Browsers may block sessionStorage. */ }
+    setPreferencesLoaded(true)
     return () => {
       clearVoiceListener?.()
       micRef.current?.stop()
@@ -112,6 +142,28 @@ export default function GreenSoilMarketPreview() {
       timersRef.current.forEach(window.clearTimeout)
     }
   }, [])
+
+  useEffect(() => {
+    if (!preferencesLoaded) return
+    try {
+      window.localStorage.setItem(PREFERENCES_KEY, JSON.stringify({
+        voiceProvider, spokenReplies, soundEffects, reducedMotion,
+        voicePreference, voiceSpeed,
+        gatewayUrl: gatewayUrl === DEFAULT_GATEWAY_URL ? gatewayUrl : DEFAULT_GATEWAY_URL,
+      }))
+    } catch { /* Settings remain usable even when storage is blocked. */ }
+  }, [preferencesLoaded, voiceProvider, spokenReplies, soundEffects, reducedMotion,
+      voicePreference, voiceSpeed, gatewayUrl])
+
+  const saveTabPairing = (token: string, enabled: boolean) => {
+    try {
+      if (enabled && token.length >= 32 && token.length <= 200) {
+        window.sessionStorage.setItem(TAB_PAIRING_KEY, token)
+      } else {
+        window.sessionStorage.removeItem(TAB_PAIRING_KEY)
+      }
+    } catch { /* Token remains memory-only when sessionStorage is blocked. */ }
+  }
 
   const sfx = () => {
     if (!soundEffects || typeof window.AudioContext === 'undefined') return
@@ -252,6 +304,7 @@ export default function GreenSoilMarketPreview() {
         throw Error('Gateway safety status could not be verified')
       }
       setGatewayConnected(true)
+      saveTabPairing(gatewayToken, rememberTab)
       setGatewayStatus('Paired with private staging Gemini gateway. Requests limited.')
     } catch {
       setGatewayConnected(false)
@@ -428,7 +481,7 @@ export default function GreenSoilMarketPreview() {
         </div>
         <div className="gs-jarvis-gateway-settings">
           <strong>Gemini AI — Private staging pairing</strong>
-          <p>Never paste Google Gemini API keys here. Enter only the separate private Railway gateway access token. Token stays in page memory and is cleared on reload.</p>
+          <p>Google and ElevenLabs API keys stay on Railway. This field uses only your separate private gateway token. By default it is cleared on refresh; optional same-tab remembering is less secure on shared devices.</p>
           <label className="gs-jarvis-gateway-label" htmlFor="gs-gateway-url">Railway HTTPS URL</label>
           <input id="gs-gateway-url" inputMode="url" autoComplete="off"
             placeholder="https://your-gateway.up.railway.app/"
@@ -436,10 +489,11 @@ export default function GreenSoilMarketPreview() {
           <label className="gs-jarvis-gateway-label" htmlFor="gs-gateway-token">Private gateway access token (not Gemini key)</label>
           <input id="gs-gateway-token" type="password" autoComplete="off"
             placeholder="Enter private Railway gateway token"
-            value={gatewayToken} onChange={e=>{setGatewayConnected(false);setGatewayToken(e.target.value)}} />
+            value={gatewayToken} onChange={e=>{setGatewayConnected(false);setGatewayToken(e.target.value);saveTabPairing('', false)}} />
+          <label className="gs-jarvis-remember-tab"><input type="checkbox" checked={rememberTab} onChange={e=>{setRememberTab(e.target.checked);saveTabPairing(gatewayToken,e.target.checked)}}/> Remember gateway token for this browser tab (not recommended on shared phones)</label>
           <div className="gs-jarvis-settings-actions">
             <button type="button" onClick={()=>void pairGateway()}>Connect Gemini</button>
-            <button type="button" onClick={()=>{setGatewayConnected(false);setGatewayToken('');setGatewayStatus('Disconnected. Token cleared.')}}>Disconnect</button>
+            <button type="button" onClick={()=>{setGatewayConnected(false);setGatewayToken('');setRememberTab(false);saveTabPairing('',false);setGatewayStatus('Disconnected. Saved tab token cleared.')}}>Disconnect</button>
           </div>
           <p role="status" className="gs-jarvis-theme-notice">{gatewayStatus}</p>
         </div>
